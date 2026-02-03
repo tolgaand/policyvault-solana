@@ -1,7 +1,15 @@
-.anchor
-.DS_Store
-target
-**/*.rs.bk
+# Local environment
+.envrc
+
+# Dependencies
 node_modules
-test-ledger
-.yarn
+
+# Anchor build artifacts
+.anchor/
+target/
+
+# Local dev notes / assistant scratch
+CLAUDE.md
+
+# If a vendor dir exists locally, keep it untracked
+vendor/
