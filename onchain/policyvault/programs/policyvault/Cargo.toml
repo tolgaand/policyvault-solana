@@ -10,6 +10,13 @@ name = "policyvault"
 
 [features]
 default = []
+
+# Anchor's proc-macros use these cfg feature flags internally.
+# Declaring them here avoids Rust's `unexpected_cfgs` warnings under check-cfg.
+custom-heap = []
+custom-panic = []
+anchor-debug = []
+
 cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []
