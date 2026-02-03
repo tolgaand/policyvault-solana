@@ -18,5 +18,20 @@ url = "https://api.apr.dev"
 cluster = "localnet"
 wallet = "../../.keypairs/deployer.json"
 
+[test]
+# Anchor sometimes checks RPC before the local validator is fully ready on macOS.
+# Give it a bit more time to avoid flaky "Unable to get latest blockhash" failures.
+startup_wait = 60000
+
+[test.validator]
+# Ensure we always start from a clean slate; avoids "program authority mismatch" when the
+# local test ledger is reused across runs.
+reset = true
+
+# Agave v3 panics when Anchor passes an unspecified bind address (0.0.0.0).
+# Force localhost so localnet reliably starts on macOS.
+bind_address = "127.0.0.1"
+
 [scripts]
-test = "yarn run mocha -t 1000000 tests/"
+# Run mocha directly; Anchor starts the local validator with the program preloaded.
+test = "ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 yarn run mocha -t 1000000 tests/"
