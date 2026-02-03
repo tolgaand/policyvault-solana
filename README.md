@@ -11,7 +11,7 @@ PolicyVault solves this by letting agents spend **only under explicit rules**. F
 ## What it does
 - **Controlled spending:** set budget limits, cooldowns, and approval rules before the agent can spend
 - **Auditable trail:** every attempt is recorded — what the agent tried, when, and whether it was allowed or denied
-- **Owner control:** update policies anytime, pause instantly with a kill switch, and review all activity
+- **Owner control:** update policies anytime, pause instantly with a kill switch *(coming soon)*, and review all activity
 
 ## How it works (conceptually)
 1. Create a **Vault** (where funds live)
@@ -25,9 +25,8 @@ PolicyVault solves this by letting agents spend **only under explicit rules**. F
 ## Why now
 AI agents are increasingly taking real actions: paying for APIs, subscriptions, infra, and procurement. PolicyVault provides **guardrails + enforcement + auditability**, so agents can operate without uncontrolled financial risk.
 
-## Today vs. tomorrow
-- **Today (Hackathon MVP):** a guarded spending vault on Solana, with policy enforcement + audit trail
-- **Tomorrow:** the same control plane can extend to Stripe / virtual cards / cloud billing / SaaS procurement
+## Scope (Hackathon MVP)
+A guarded spending vault on Solana with policy enforcement + audit trail.
 
 ---
 
