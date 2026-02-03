@@ -4,6 +4,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 
 import { derivePolicyPda, deriveVaultPda, getProgram, programId } from './policyvault'
+import FlowDiagram from './FlowDiagram'
 import './App.css'
 
 type TxLog = { label: string; sig: string }
@@ -186,40 +187,7 @@ export default function App() {
         {/* ── How It Works ────────────────────────────── */}
         <section className="section">
           <h2 className="section-title">How It Works</h2>
-          <div className="steps-grid">
-            <div className="step-card">
-              <span className="step-number">01</span>
-              <h3 className="step-heading">Create a Vault</h3>
-              <p className="step-text">
-                Deploy an on-chain vault account owned by your wallet.
-                This is the spending source your agent will use.
-              </p>
-            </div>
-            <div className="step-card">
-              <span className="step-number">02</span>
-              <h3 className="step-heading">Define a Policy</h3>
-              <p className="step-text">
-                Set a daily budget cap and a cooldown between transactions.
-                The program enforces these rules at the instruction level.
-              </p>
-            </div>
-            <div className="step-card">
-              <span className="step-number">03</span>
-              <h3 className="step-heading">Agent Spends</h3>
-              <p className="step-text">
-                Your AI agent submits spend intents. Each is validated against
-                the policy before SOL leaves the vault.
-              </p>
-            </div>
-            <div className="step-card">
-              <span className="step-number">04</span>
-              <h3 className="step-heading">Audit &amp; Adjust</h3>
-              <p className="step-text">
-                Every transaction is recorded on-chain. Update limits or revoke
-                access at any time with a single instruction.
-              </p>
-            </div>
-          </div>
+          <FlowDiagram />
         </section>
 
         {/* ── Demo ────────────────────────────────────── */}
