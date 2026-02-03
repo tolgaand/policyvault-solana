@@ -7,7 +7,6 @@ import { derivePolicyPda, deriveVaultPda, getProgram, programId } from './policy
 import './App.css'
 
 type TxLog = { label: string; sig: string }
-type Tab = 'about' | 'demo'
 
 function lamports(sol: number) {
   return Math.round(sol * web3.LAMPORTS_PER_SOL)
@@ -17,14 +16,12 @@ export default function App() {
   const { connection } = useConnection()
   const wallet = useWallet()
 
-  const [activeTab, setActiveTab] = useState<Tab>('about')
   const [vaultPda, setVaultPda] = useState<string | null>(null)
   const [policyPda, setPolicyPda] = useState<string | null>(null)
 
   const provider = useMemo(() => {
     if (!wallet.publicKey || !wallet.signTransaction || !wallet.signAllTransactions) return null
 
-    // AnchorProvider expects an AnchorWallet-compatible object
     const anchorWallet = {
       publicKey: wallet.publicKey,
       signTransaction: wallet.signTransaction,
@@ -130,251 +127,235 @@ export default function App() {
         <WalletMultiButton />
       </header>
 
-      {/* ── Tab switcher ──────────────────────────────── */}
-      <nav className="tab-bar">
-        <button
-          className={`tab-btn ${activeTab === 'about' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('about')}
-        >
-          About
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'demo' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('demo')}
-        >
-          Demo
-        </button>
-      </nav>
+      {/* ── Hero ──────────────────────────────────────── */}
+      <section className="hero">
+        <div className="hero-banner">
+          <img
+            src="/assets/policyvault-banner.jpeg"
+            alt="PolicyVault banner"
+            className="hero-img"
+          />
+          <div className="hero-overlay" />
+        </div>
+        <div className="hero-body">
+          <h2 className="hero-headline">
+            Policy-enforced spending vaults for AI&nbsp;agents
+          </h2>
+          <p className="hero-subhead">
+            Set budgets, cooldowns, and kill switches on-chain. Your agent spends
+            within&nbsp;rules&nbsp;&mdash; or it doesn&rsquo;t spend at&nbsp;all.
+          </p>
+          <a href="#demo" className="btn-cta">
+            Open Demo
+          </a>
+        </div>
+      </section>
 
-      {/* ── Main ────────────────────────────────────── */}
       <main className="main-content">
-        {activeTab === 'about' && (
-          <>
-            {/* Hero banner */}
-            <div className="hero-banner">
-              <img
-                src="/assets/policyvault-banner.jpeg"
-                alt="PolicyVault banner"
-                className="hero-img"
-              />
-              <div className="hero-overlay" />
+        {/* ── Features ────────────────────────────────── */}
+        <section className="section">
+          <h2 className="section-title">Core Guarantees</h2>
+          <div className="feature-grid">
+            <div className="feature-card">
+              <div className="feature-icon">&#9878;</div>
+              <h3 className="feature-heading">Controlled Spending</h3>
+              <p className="feature-text">
+                Daily budgets, cooldown periods, and approval requirements.
+                Your AI agent operates within strict, enforceable boundaries.
+              </p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">&#9783;</div>
+              <h3 className="feature-heading">Auditable Trail</h3>
+              <p className="feature-text">
+                Every request is logged on-chain &mdash; allowed or denied, with
+                the reason recorded. Full transparency for every transaction.
+              </p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">&#9211;</div>
+              <h3 className="feature-heading">Owner Control</h3>
+              <p className="feature-text">
+                Update policy parameters at any time. Revoke access instantly.
+              </p>
+              <span className="coming-soon">Kill switch &mdash; coming soon</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── How It Works ────────────────────────────── */}
+        <section className="section">
+          <h2 className="section-title">How It Works</h2>
+          <div className="steps-grid">
+            <div className="step-card">
+              <span className="step-number">01</span>
+              <h3 className="step-heading">Create a Vault</h3>
+              <p className="step-text">
+                Deploy an on-chain vault account owned by your wallet.
+                This is the spending source your agent will use.
+              </p>
+            </div>
+            <div className="step-card">
+              <span className="step-number">02</span>
+              <h3 className="step-heading">Define a Policy</h3>
+              <p className="step-text">
+                Set a daily budget cap and a cooldown between transactions.
+                The program enforces these rules at the instruction level.
+              </p>
+            </div>
+            <div className="step-card">
+              <span className="step-number">03</span>
+              <h3 className="step-heading">Agent Spends</h3>
+              <p className="step-text">
+                Your AI agent submits spend intents. Each is validated against
+                the policy before SOL leaves the vault.
+              </p>
+            </div>
+            <div className="step-card">
+              <span className="step-number">04</span>
+              <h3 className="step-heading">Audit &amp; Adjust</h3>
+              <p className="step-text">
+                Every transaction is recorded on-chain. Update limits or revoke
+                access at any time with a single instruction.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Demo ────────────────────────────────────── */}
+        <section className="section" id="demo">
+          <h2 className="section-title">Demo</h2>
+          <p className="demo-hint">
+            <code>initialize_vault</code> &rarr; <code>initialize_policy</code> &rarr;{' '}
+            <code>spend_intent</code> / <code>set_policy</code>
+          </p>
+
+          {/* Controls */}
+          <div className="glass-panel">
+            <h3 className="panel-header">Policy Parameters</h3>
+            <div className="param-grid">
+              <div className="param-group">
+                <span className="param-label">Daily budget (SOL)</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={dailyBudgetSol}
+                  onChange={(e) => setDailyBudgetSol(Number(e.target.value))}
+                />
+              </div>
+              <div className="param-group">
+                <span className="param-label">Cooldown (seconds)</span>
+                <input
+                  type="number"
+                  value={cooldownSeconds}
+                  onChange={(e) => setCooldownSeconds(Number(e.target.value))}
+                />
+              </div>
+              <div className="param-group">
+                <span className="param-label">Spend amount (SOL)</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={spendAmountSol}
+                  onChange={(e) => setSpendAmountSol(Number(e.target.value))}
+                />
+              </div>
             </div>
 
-            {/* Pitch */}
-            <section className="glass-panel about-section">
-              <h2 className="about-title">
-                PolicyVault is not a wallet.
-                <br />
-                It's a policy-enforced spending vault for AI agents.
-              </h2>
+            <div className="action-row">
+              <button disabled={!wallet.connected} onClick={onInitVault}>
+                initialize_vault
+              </button>
+              <button disabled={!wallet.connected} onClick={onInitPolicy}>
+                initialize_policy
+              </button>
+              <button disabled={!wallet.connected} onClick={onSetPolicy}>
+                set_policy
+              </button>
+              <button disabled={!wallet.connected} onClick={onSpendIntent}>
+                spend_intent
+              </button>
+            </div>
+          </div>
 
-              <div className="feature-grid">
-                <div className="feature-card">
-                  <h3 className="feature-heading">Controlled Spending</h3>
-                  <p className="feature-text">
-                    Set daily budgets, cooldown periods between transactions, and approval
-                    requirements. Your AI agent operates within strict, enforceable boundaries.
-                  </p>
-                </div>
-
-                <div className="feature-card">
-                  <h3 className="feature-heading">Auditable Trail</h3>
-                  <p className="feature-text">
-                    Every spending request is logged on-chain &mdash; allowed or denied, with the
-                    reason recorded. Full transparency for every transaction.
-                  </p>
-                </div>
-
-                <div className="feature-card">
-                  <h3 className="feature-heading">Owner Control</h3>
-                  <p className="feature-text">
-                    Update policy parameters at any time. Revoke access instantly.
-                  </p>
-                  <span className="coming-soon">Kill switch &mdash; coming soon</span>
-                </div>
-              </div>
-            </section>
-
-            {/* Conceptual flow */}
-            <section className="glass-panel about-section">
-              <h2 className="panel-header">How It Works</h2>
-              <div className="flow-diagram">
-                <span className="flow-node">Vault</span>
-                <span className="flow-arrow" />
-                <span className="flow-node">Policy</span>
-                <span className="flow-arrow" />
-                <span className="flow-node">Spending Request</span>
-                <span className="flow-arrow" />
-                <span className="flow-node flow-node-result">
-                  Allowed / Denied
-                  <small className="flow-sub">(with reason)</small>
-                </span>
-                <span className="flow-arrow" />
-                <span className="flow-node">Logged</span>
-              </div>
-            </section>
-
-            {/* Today vs Tomorrow */}
-            <section className="glass-panel about-section">
-              <h2 className="panel-header">Roadmap</h2>
-              <div className="roadmap-grid">
-                <div className="roadmap-card">
-                  <h3 className="roadmap-label">Today</h3>
-                  <p className="roadmap-text">
-                    A Solana guarded vault &mdash; on-chain policy enforcement for SOL spending
-                    with budget limits, cooldowns, and full audit logs.
-                  </p>
-                </div>
-                <div className="roadmap-card roadmap-future">
-                  <h3 className="roadmap-label">Tomorrow</h3>
-                  <p className="roadmap-text">
-                    Extend policy enforcement to Stripe charges, virtual cards, cloud billing,
-                    and SaaS procurement. Same model, every spending channel.
-                  </p>
-                </div>
-              </div>
-            </section>
-          </>
-        )}
-
-        {activeTab === 'demo' && (
-          <>
-            <p className="flow-hint">
-              <code>initialize_vault</code> &rarr; <code>initialize_policy</code> &rarr;{' '}
-              <code>spend_intent</code> / <code>set_policy</code>
-            </p>
-
-            {/* Addresses panel */}
-            <section className="glass-panel">
-              <h2 className="panel-header">Addresses</h2>
-
-              <div className="addr-grid">
-                <div className="addr-row">
-                  <span className="addr-label">Program</span>
-                  <code className="addr-value">{programId().toBase58()}</code>
-                  <button className="btn-ghost" onClick={() => copy(programId().toBase58())}>
-                    Copy
-                  </button>
-                </div>
-
-                <div className="addr-row">
-                  <span className="addr-label">Wallet</span>
-                  <code className="addr-value">{wallet.publicKey?.toBase58() ?? '—'}</code>
-                  <button
-                    className="btn-ghost"
-                    disabled={!wallet.publicKey}
-                    onClick={() => wallet.publicKey && copy(wallet.publicKey.toBase58())}
-                  >
-                    Copy
-                  </button>
-                </div>
-
-                <div className="addr-row">
-                  <span className="addr-label">Vault PDA</span>
-                  <code className="addr-value">{vaultPda ?? '—'}</code>
-                  <button className="btn-ghost" disabled={!vaultPda} onClick={() => vaultPda && copy(vaultPda)}>
-                    Copy
-                  </button>
-                </div>
-
-                <div className="addr-row">
-                  <span className="addr-label">Policy PDA</span>
-                  <code className="addr-value">{policyPda ?? '—'}</code>
-                  <button
-                    className="btn-ghost"
-                    disabled={!policyPda}
-                    onClick={() => policyPda && copy(policyPda)}
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-
-              <div className="action-row">
-                <button className="btn-secondary" disabled={!wallet.connected} onClick={refreshPdas}>
-                  refresh PDAs
-                </button>
-              </div>
-            </section>
-
-            {/* Controls panel */}
-            <section className="glass-panel">
-              <h2 className="panel-header">Policy Parameters</h2>
-
-              <div className="param-grid">
-                <div className="param-group">
-                  <span className="param-label">Daily budget (SOL)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={dailyBudgetSol}
-                    onChange={(e) => setDailyBudgetSol(Number(e.target.value))}
-                  />
-                </div>
-                <div className="param-group">
-                  <span className="param-label">Cooldown (seconds)</span>
-                  <input
-                    type="number"
-                    value={cooldownSeconds}
-                    onChange={(e) => setCooldownSeconds(Number(e.target.value))}
-                  />
-                </div>
-                <div className="param-group">
-                  <span className="param-label">Spend amount (SOL)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={spendAmountSol}
-                    onChange={(e) => setSpendAmountSol(Number(e.target.value))}
-                  />
-                </div>
-              </div>
-
-              <div className="action-row">
-                <button disabled={!wallet.connected} onClick={onInitVault}>
-                  initialize_vault
-                </button>
-                <button disabled={!wallet.connected} onClick={onInitPolicy}>
-                  initialize_policy
-                </button>
-                <button disabled={!wallet.connected} onClick={onSetPolicy}>
-                  set_policy
-                </button>
-                <button disabled={!wallet.connected} onClick={onSpendIntent}>
-                  spend_intent
-                </button>
-              </div>
-            </section>
-
-            {/* Tx log panel */}
-            <section className="glass-panel">
-              <h2 className="panel-header">Transaction Log</h2>
-              {logs.length === 0 ? (
-                <p className="tx-empty">No transactions yet.</p>
-              ) : (
-                <ul className="tx-list">
-                  {logs.map((l) => (
-                    <li key={l.sig} className="tx-item">
-                      <span className="tx-label">{l.label}</span>
-                      <a
-                        className="tx-sig"
-                        href={`https://explorer.solana.com/tx/${l.sig}?cluster=devnet`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {l.sig}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {!wallet.connected && (
-              <p className="connect-hint">Connect a wallet to interact with PolicyVault.</p>
+          {/* Tx log */}
+          <div className="glass-panel">
+            <h3 className="panel-header">Transaction Log</h3>
+            {logs.length === 0 ? (
+              <p className="tx-empty">No transactions yet.</p>
+            ) : (
+              <ul className="tx-list">
+                {logs.map((l) => (
+                  <li key={l.sig} className="tx-item">
+                    <span className="tx-label">{l.label}</span>
+                    <a
+                      className="tx-sig"
+                      href={`https://explorer.solana.com/tx/${l.sig}?cluster=devnet`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {l.sig}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             )}
-          </>
-        )}
+          </div>
+
+          {!wallet.connected && (
+            <p className="connect-hint">Connect a wallet to interact with PolicyVault.</p>
+          )}
+        </section>
+
+        {/* ── Addresses ───────────────────────────────── */}
+        <section className="section">
+          <h2 className="section-title">Addresses</h2>
+          <div className="glass-panel">
+            <div className="addr-grid">
+              <div className="addr-row">
+                <span className="addr-label">Program</span>
+                <code className="addr-value">{programId().toBase58()}</code>
+                <button className="btn-ghost" onClick={() => copy(programId().toBase58())}>
+                  Copy
+                </button>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">Wallet</span>
+                <code className="addr-value">{wallet.publicKey?.toBase58() ?? '—'}</code>
+                <button
+                  className="btn-ghost"
+                  disabled={!wallet.publicKey}
+                  onClick={() => wallet.publicKey && copy(wallet.publicKey.toBase58())}
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">Vault PDA</span>
+                <code className="addr-value">{vaultPda ?? '—'}</code>
+                <button className="btn-ghost" disabled={!vaultPda} onClick={() => vaultPda && copy(vaultPda)}>
+                  Copy
+                </button>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">Policy PDA</span>
+                <code className="addr-value">{policyPda ?? '—'}</code>
+                <button
+                  className="btn-ghost"
+                  disabled={!policyPda}
+                  onClick={() => policyPda && copy(policyPda)}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+            <div className="action-row">
+              <button className="btn-secondary" disabled={!wallet.connected} onClick={refreshPdas}>
+                refresh PDAs
+              </button>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   )
