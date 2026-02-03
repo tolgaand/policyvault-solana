@@ -1,0 +1,11 @@
+.DS_Store
+node_modules
+.env
+
+# Solana / Anchor
+.keypairs/
+**/*.keypair.json
+
+# Build
+/dist
+/target
