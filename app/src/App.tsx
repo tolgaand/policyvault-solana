@@ -3,7 +3,7 @@ import { AnchorProvider, web3, BN } from '@coral-xyz/anchor'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 
-import { derivePolicyPda, deriveVaultPda, getProgram } from './policyvault'
+import { derivePolicyPda, deriveVaultPda, getProgram, programId } from './policyvault'
 import './App.css'
 
 type TxLog = { label: string; sig: string }
@@ -15,6 +15,9 @@ function lamports(sol: number) {
 export default function App() {
   const { connection } = useConnection()
   const wallet = useWallet()
+
+  const [vaultPda, setVaultPda] = useState<string | null>(null)
+  const [policyPda, setPolicyPda] = useState<string | null>(null)
 
   const provider = useMemo(() => {
     if (!wallet.publicKey || !wallet.signTransaction || !wallet.signAllTransactions) return null
@@ -38,6 +41,22 @@ export default function App() {
 
   const pushLog = (label: string, sig: string) => setLogs((l) => [{ label, sig }, ...l])
 
+  async function refreshPdas() {
+    if (!wallet.publicKey) {
+      setVaultPda(null)
+      setPolicyPda(null)
+      return
+    }
+    const [vault] = await deriveVaultPda(wallet.publicKey)
+    const [policy] = await derivePolicyPda(vault)
+    setVaultPda(vault.toBase58())
+    setPolicyPda(policy.toBase58())
+  }
+
+  async function copy(text: string) {
+    await navigator.clipboard.writeText(text)
+  }
+
   async function ensureWallet() {
     if (!wallet.publicKey) throw new Error('Connect wallet')
     if (!provider || !program) throw new Error('Provider not ready')
@@ -54,6 +73,7 @@ export default function App() {
       .rpc()
 
     pushLog('initialize_vault', sig)
+    await refreshPdas()
   }
 
   async function onInitPolicy() {
@@ -67,6 +87,7 @@ export default function App() {
       .rpc()
 
     pushLog('initialize_policy', sig)
+    await refreshPdas()
   }
 
   async function onSetPolicy() {
@@ -80,6 +101,7 @@ export default function App() {
       .rpc()
 
     pushLog('set_policy', sig)
+    await refreshPdas()
   }
 
   async function onSpendIntent() {
@@ -93,6 +115,7 @@ export default function App() {
       .rpc()
 
     pushLog('spend_intent', sig)
+    await refreshPdas()
   }
 
   return (
@@ -111,6 +134,59 @@ export default function App() {
           <code>initialize_vault</code> &rarr; <code>initialize_policy</code> &rarr;{' '}
           <code>spend_intent</code> / <code>set_policy</code>
         </p>
+
+        {/* Addresses panel */}
+        <section className="glass-panel">
+          <h2 className="panel-header">Addresses</h2>
+
+          <div className="addr-grid">
+            <div className="addr-row">
+              <span className="addr-label">Program</span>
+              <code className="addr-value">{programId().toBase58()}</code>
+              <button className="btn-ghost" onClick={() => copy(programId().toBase58())}>
+                Copy
+              </button>
+            </div>
+
+            <div className="addr-row">
+              <span className="addr-label">Wallet</span>
+              <code className="addr-value">{wallet.publicKey?.toBase58() ?? '—'}</code>
+              <button
+                className="btn-ghost"
+                disabled={!wallet.publicKey}
+                onClick={() => wallet.publicKey && copy(wallet.publicKey.toBase58())}
+              >
+                Copy
+              </button>
+            </div>
+
+            <div className="addr-row">
+              <span className="addr-label">Vault PDA</span>
+              <code className="addr-value">{vaultPda ?? '—'}</code>
+              <button className="btn-ghost" disabled={!vaultPda} onClick={() => vaultPda && copy(vaultPda)}>
+                Copy
+              </button>
+            </div>
+
+            <div className="addr-row">
+              <span className="addr-label">Policy PDA</span>
+              <code className="addr-value">{policyPda ?? '—'}</code>
+              <button
+                className="btn-ghost"
+                disabled={!policyPda}
+                onClick={() => policyPda && copy(policyPda)}
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <div className="action-row">
+            <button className="btn-secondary" disabled={!wallet.connected} onClick={refreshPdas}>
+              refresh PDAs
+            </button>
+          </div>
+        </section>
 
         {/* Controls panel */}
         <section className="glass-panel">
