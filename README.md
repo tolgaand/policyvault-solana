@@ -1,32 +1,35 @@
 # PolicyVault
 
-PolicyVault is a policy-enforced spending vault for AI agents on Solana.
+PolicyVault is not a wallet. It’s a **policy-enforced spending vault** for AI agents.
 
-## What it is
-A simple Solana (Anchor) program + TypeScript client that lets an agent spend funds only within explicit, reviewable rules:
+Give an AI agent a wallet and you’re stuck with two bad choices:
+- **No authority** → the agent can’t do useful work
+- **Full authority** → a bug, prompt injection, or compromise can drain everything
 
-- Daily budget caps
-- Allowlists/denylists (merchants / programs / mints)
-- Per-recipient caps
-- Cooldowns (anti-loop)
-- Slippage caps (for swap-style payments)
-- On-chain audit log of intents + executions
+PolicyVault solves this by letting agents spend **only under explicit rules**. Funds live in a guarded vault, and every spend attempt must pass policy checks before it can execute.
 
-## Why it matters
-Agents increasingly control wallets. The missing primitive is *permissioned spending*: letting an agent operate with guardrails instead of full custody.
+## What it does
+- **Controlled spending:** set budget limits, cooldowns, and approval rules before the agent can spend
+- **Auditable trail:** every attempt is recorded — what the agent tried, when, and whether it was allowed or denied
+- **Owner control:** update policies anytime, pause instantly with a kill switch, and review all activity
 
-## MVP scope (hackathon)
-1. **Anchor program (devnet)**
-   - `Vault` PDA holds funds
-   - `Policy` PDA stores rules
-   - `spend_intent` instruction validates policy and records an `AuditEvent`
-2. **TS SDK**
-   - Create vault/policy
-   - Submit spend intent
-   - Read audit log
-3. **Demo UI**
-   - Create policy
-   - Attempt allowed vs denied spends
+## How it works (conceptually)
+1. Create a **Vault** (where funds live)
+2. Define a **Policy** (rules like daily cap, rate limits, approvals)
+3. The agent sends a **Spending Request** (“I want to spend X for Y”)
+4. PolicyVault evaluates the request:
+   - If it matches policy → **Allowed**
+   - If not → **Denied** (with reason)
+5. Everything is logged for later review
+
+## Why now
+AI agents are increasingly taking real actions: paying for APIs, subscriptions, infra, and procurement. PolicyVault provides **guardrails + enforcement + auditability**, so agents can operate without uncontrolled financial risk.
+
+## Today vs. tomorrow
+- **Today (Hackathon MVP):** a guarded spending vault on Solana, with policy enforcement + audit trail
+- **Tomorrow:** the same control plane can extend to Stripe / virtual cards / cloud billing / SaaS procurement
+
+---
 
 ## Dev
 
