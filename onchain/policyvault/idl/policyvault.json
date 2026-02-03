@@ -8,9 +8,66 @@
   },
   "instructions": [
     {
+      "name": "close_audit_event",
+      "docs": [
+        "E) Reclaim rent from an old AuditEvent account. Authority only."
+      ],
+      "discriminator": [
+        196,
+        81,
+        215,
+        160,
+        129,
+        135,
+        35,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "audit_event",
+          "writable": true
+        },
+        {
+          "name": "policy",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "policy.vault",
+                "account": "Policy"
+              }
+            ]
+          },
+          "relations": [
+            "audit_event"
+          ]
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "initialize_policy",
       "docs": [
-        "B) Create the Policy PDA linked to a vault."
+        "B) Create the Policy PDA linked to a vault.",
+        "",
+        "`agent` — optional pubkey that may also call `spend_intent`.",
+        "Pass `None` to restrict spending to the authority only."
       ],
       "discriminator": [
         9,
@@ -88,6 +145,12 @@
         {
           "name": "cooldown_seconds",
           "type": "u32"
+        },
+        {
+          "name": "agent",
+          "type": {
+            "option": "pubkey"
+          }
         }
       ]
     },
@@ -215,13 +278,23 @@
         {
           "name": "cooldown_seconds",
           "type": "u32"
+        },
+        {
+          "name": "agent",
+          "type": {
+            "option": "pubkey"
+          }
         }
       ]
     },
     {
       "name": "spend_intent",
       "docs": [
-        "D) Record a spend intent; enforce policy and write an AuditEvent."
+        "D) Record a spend intent; enforce policy, optionally execute SOL transfer.",
+        "",
+        "Authorization: caller must be either `policy.authority` or `policy.agent` (if set).",
+        "When allowed, lamports are transferred from the vault PDA to the recipient.",
+        "When denied, no transfer occurs but the audit event is still recorded."
       ],
       "discriminator": [
         211,
@@ -286,6 +359,7 @@
         },
         {
           "name": "vault",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -307,6 +381,10 @@
           }
         },
         {
+          "name": "recipient",
+          "writable": true
+        },
+        {
           "name": "caller",
           "writable": true,
           "signer": true
@@ -317,10 +395,6 @@
         }
       ],
       "args": [
-        {
-          "name": "recipient",
-          "type": "pubkey"
-        },
         {
           "name": "amount",
           "type": "u64"
@@ -388,7 +462,7 @@
     {
       "code": 6000,
       "name": "Unauthorized",
-      "msg": "Unauthorized: signer is not the policy authority"
+      "msg": "Unauthorized: signer is not the policy authority or agent"
     }
   ],
   "types": [
@@ -440,6 +514,12 @@
           {
             "name": "authority",
             "type": "pubkey"
+          },
+          {
+            "name": "agent",
+            "type": {
+              "option": "pubkey"
+            }
           },
           {
             "name": "daily_budget_lamports",

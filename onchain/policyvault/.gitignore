@@ -7,6 +7,7 @@ node_modules
 # Anchor build artifacts
 .anchor/
 target/
+test-ledger/
 
 # Local dev notes / assistant scratch
 CLAUDE.md

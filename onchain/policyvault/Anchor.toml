@@ -15,7 +15,7 @@ policyvault = "DiWRnGf1JpqZrL8n9dUA9bUaJ4ruBVvmmKBcrdp7tJLD"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "../../.keypairs/deployer.json"
 
 [scripts]

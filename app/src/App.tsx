@@ -81,8 +81,8 @@ export default function App() {
     const [policy] = await derivePolicyPda(vault)
 
     const sig = await program.methods
-      .initializePolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds)
-      .accounts({ policy, vault, authority: owner, systemProgram: web3.SystemProgram.programId })
+      .initializePolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds, null)
+      .accounts({ policy, vault, owner, systemProgram: web3.SystemProgram.programId })
       .rpc()
 
     pushLog('initialize_policy', sig)
@@ -95,7 +95,7 @@ export default function App() {
     const [policy] = await derivePolicyPda(vault)
 
     const sig = await program.methods
-      .setPolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds)
+      .setPolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds, null)
       .accounts({ policy, vault, authority: owner })
       .rpc()
 
@@ -110,7 +110,7 @@ export default function App() {
 
     const sig = await program.methods
       .spendIntent(new BN(lamports(spendAmountSol)))
-      .accounts({ vault, policy, authority: owner })
+      .accounts({ vault, policy, recipient: owner, caller: owner, systemProgram: web3.SystemProgram.programId })
       .rpc()
 
     pushLog('spend_intent', sig)
