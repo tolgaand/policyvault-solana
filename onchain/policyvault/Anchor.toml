@@ -5,14 +5,17 @@ anchor_version = "0.32.1"
 resolution = true
 skip-lint = false
 
+[programs.localnet]
+policyvault = "DiWRnGf1JpqZrL8n9dUA9bUaJ4ruBVvmmKBcrdp7tJLD"
+
 [programs.devnet]
-policyvault = "GSzcBxsU64WAVqEFmjdbb8mp5xsz9a1jawZW1Z63z2GK"
+policyvault = "DiWRnGf1JpqZrL8n9dUA9bUaJ4ruBVvmmKBcrdp7tJLD"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "devnet"
 wallet = "../../.keypairs/deployer.json"
 
 [scripts]

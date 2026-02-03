@@ -30,9 +30,11 @@ airdrop:
 
 .PHONY: onchain-test
 onchain-test:
+	./scripts/sync-program-keypair.sh
 	cd $(ONCHAIN_DIR) && ANCHOR_WALLET=../../$(KEYPAIR) ANCHOR_PROVIDER_URL=$(RPC) anchor test --skip-local-validator
 
 .PHONY: deploy
 deploy:
+	./scripts/sync-program-keypair.sh
 	cd $(ONCHAIN_DIR) && ANCHOR_WALLET=../../$(KEYPAIR) ANCHOR_PROVIDER_URL=$(RPC) anchor build
 	cd $(ONCHAIN_DIR) && ANCHOR_WALLET=../../$(KEYPAIR) ANCHOR_PROVIDER_URL=$(RPC) anchor deploy

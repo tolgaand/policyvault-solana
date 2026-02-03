@@ -1,0 +1,120 @@
+# PolicyVault CI – frontend lint/build + onchain anchor build & test (local validator)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel redundant runs on the same branch / PR
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SOLANA_CLI_VERSION: "v2.1.7"    # Agave release compatible with Anchor 0.32.1
+  ANCHOR_VERSION: "0.32.1"
+  NODE_VERSION: "22"
+  RUST_TOOLCHAIN: "stable"
+
+jobs:
+  # ──────────────────────────────────────────────
+  # Frontend – lint & build the Vite/React app
+  # ──────────────────────────────────────────────
+  frontend:
+    name: Frontend (lint + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+  # ──────────────────────────────────────────────
+  # Onchain – build & test the Anchor program
+  # ──────────────────────────────────────────────
+  onchain:
+    name: Onchain (anchor build + test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: onchain/policyvault
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Rust ──
+      - name: Install Rust ${{ env.RUST_TOOLCHAIN }}
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry & build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            onchain/policyvault/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('onchain/policyvault/**/Cargo.lock') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      # ── Solana / Agave CLI ──
+      - name: Install Solana CLI ${{ env.SOLANA_CLI_VERSION }}
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/${{ env.SOLANA_CLI_VERSION }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Solana CLI
+        run: solana --version
+
+      # ── Anchor CLI via AVM ──
+      - name: Cache AVM
+        uses: actions/cache@v4
+        with:
+          path: ~/.avm
+          key: avm-${{ runner.os }}-${{ env.ANCHOR_VERSION }}
+
+      - name: Install AVM & Anchor ${{ env.ANCHOR_VERSION }}
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --force --locked
+          avm install ${{ env.ANCHOR_VERSION }}
+          avm use ${{ env.ANCHOR_VERSION }}
+
+      - name: Verify Anchor CLI
+        run: anchor --version
+
+      # ── Node (for test runner – mocha) ──
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          cache-dependency-path: onchain/policyvault/yarn.lock
+
+      - name: Install JS dependencies
+        run: yarn install --frozen-lockfile
+
+      # ── Generate a throwaway keypair (no committed secrets) ──
+      - name: Generate CI keypair
+        run: |
+          solana-keygen new --no-bip39-passphrase -o /tmp/ci-keypair.json
+          solana config set --url http://127.0.0.1:8899 --keypair /tmp/ci-keypair.json
+
+      # ── Build & Test ──
+      - name: Anchor build
+        run: anchor build
+        env:
+          ANCHOR_WALLET: /tmp/ci-keypair.json
+
+      - name: Anchor test (local validator)
+        run: anchor test
+        env:
+          ANCHOR_WALLET: /tmp/ci-keypair.json
+          ANCHOR_PROVIDER_URL: "http://127.0.0.1:8899"
