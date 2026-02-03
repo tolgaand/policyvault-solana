@@ -28,5 +28,35 @@ Agents increasingly control wallets. The missing primitive is *permissioned spen
    - Create policy
    - Attempt allowed vs denied spends
 
+## Dev
+
+### Prereqs
+- Node 22+
+- Rust toolchain
+- Solana/Agave CLI v2.x (CI uses v2.1.7; must include `cargo-build-sbf`)
+- Anchor CLI 0.32.1
+
+### Quickstart
+```bash
+make setup
+make dev
+```
+
+### Onchain tests
+Local validator (recommended for CI-like runs):
+```bash
+make onchain-test-local
+```
+
+Devnet (requires SOL in `.keypairs/deployer.json`):
+```bash
+make onchain-test
+```
+
+## CI
+GitHub Actions runs on every PR/push to `main`:
+- Frontend: lint + build
+- Onchain: `anchor build` + `anchor test` on **localnet** with an ephemeral keypair (no committed secrets)
+
 ## Status
 Draft project for Colosseum Agent Hackathon.
