@@ -19,19 +19,15 @@ cluster = "localnet"
 wallet = "../../.keypairs/deployer.json"
 
 [test]
-# Anchor sometimes checks RPC before the local validator is fully ready on macOS.
-# Give it a bit more time to avoid flaky "Unable to get latest blockhash" failures.
 startup_wait = 60000
 
 [test.validator]
-# Ensure we always start from a clean slate; avoids "program authority mismatch" when the
-# local test ledger is reused across runs.
 reset = true
-
-# Agave v3 panics when Anchor passes an unspecified bind address (0.0.0.0).
-# Force localhost so localnet reliably starts on macOS.
 bind_address = "127.0.0.1"
 
+# NOTE: Anchor v0.32 currently runs the scripts.test suite without reliably
+# starting+deploying to a fresh local validator. In this repo, we run localnet
+# tests via `npm run anchor:test`, which starts `solana-test-validator` with the
+# program preloaded and then calls `anchor test --skip-local-validator --skip-deploy`.
 [scripts]
-# Run mocha directly; Anchor starts the local validator with the program preloaded.
-test = "ANCHOR_PROVIDER_URL=http://127.0.0.1:8899 yarn run mocha -t 1000000 tests/"
+test = "yarn run mocha -t 1000000 tests/"
