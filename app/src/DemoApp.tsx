@@ -557,11 +557,11 @@ export default function DemoApp() {
     <>
       <section className="section" id="demo">
         <h2 className="section-title">Demo</h2>
-        <p className="demo-hint">
-          <code>initialize_vault</code> &rarr; <code>initialize_policy</code> &rarr; <code>set_policy</code> /{' '}
-          <code>spend_intent</code>
-          <span className="demo-hint-muted"> (open Advanced for pause/allowlist/caps + spend_intent_v2)</span>
-        </p>
+        <ol className="demo-steps">
+          <li><strong>Create vault &amp; policy</strong> — connect your wallet, then click <code>initialize_vault</code> followed by <code>initialize_policy</code>.</li>
+          <li><strong>Configure &amp; spend</strong> — tweak parameters (or pick a preset), click <code>set_policy</code>, then <code>spend_intent</code>.</li>
+          <li><strong>Review</strong> — fetch on-chain state, check the preflight prediction, and browse the audit trail.</li>
+        </ol>
 
         <div className="demo-connect-row">
           <WalletMultiButton />
@@ -764,7 +764,11 @@ export default function DemoApp() {
               </div>
             </div>
           ) : (
-            <p className="tx-empty">No snapshot loaded yet.</p>
+            <p className="tx-empty">
+              {wallet.connected
+                ? 'No snapshot loaded yet. Click "fetch on-chain state" after initializing a vault and policy.'
+                : 'Connect a wallet to fetch on-chain state.'}
+            </p>
           )}
 
           {recipientSpendSnapshot && (
@@ -786,11 +790,12 @@ export default function DemoApp() {
           )}
         </div>
 
-        {wallet.connected && (
-          <div className="glass-panel">
-            <h3 className="panel-header">Preflight (spend_intent_v2)</h3>
-            {preflight.status === 'not_connected' || preflight.status === 'missing_snapshot' ? (
-              <p className="tx-empty">Fetch on-chain state first to predict the next spend.</p>
+        <div className="glass-panel">
+          <h3 className="panel-header">Preflight (spend_intent_v2)</h3>
+          {!wallet.connected ? (
+            <p className="tx-empty">Connect a wallet to see preflight predictions.</p>
+          ) : preflight.status === 'not_connected' || preflight.status === 'missing_snapshot' ? (
+            <p className="tx-empty">Fetch on-chain state first to predict the next spend.</p>
             ) : (
               <>
                 <div className="addr-grid">
@@ -828,9 +833,8 @@ export default function DemoApp() {
                   </p>
                 )}
               </>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="glass-panel">
           <h3 className="panel-header">Audit Trail</h3>
@@ -932,7 +936,11 @@ export default function DemoApp() {
           </p>
 
           {auditEvents.length === 0 ? (
-            <p className="tx-empty">No audit events loaded yet.</p>
+            <p className="tx-empty">
+              {wallet.connected
+                ? 'No audit events loaded yet. Run spend_intent_v2, then click "fetch recent audit events".'
+                : 'Connect a wallet to load audit events.'}
+            </p>
           ) : filteredAuditEvents.length === 0 ? (
             <div className="tx-empty">
               <p style={{ margin: 0 }}>No events match current filters.</p>
@@ -956,7 +964,7 @@ export default function DemoApp() {
         <div className="glass-panel">
           <h3 className="panel-header">Transaction Log</h3>
           {logs.length === 0 ? (
-            <p className="tx-empty">No transactions yet.</p>
+            <p className="tx-empty">No transactions yet. Run a vault action above to see results here.</p>
           ) : (
             <ul className="tx-list">
               {logs.map((l) => (
@@ -977,9 +985,14 @@ export default function DemoApp() {
         </div>
 
         {!wallet.connected && <p className="connect-hint">Connect a wallet to interact with PolicyVault.</p>}
+
+        <nav className="demo-nav">
+          <a href="#">Back to top</a>
+          <a href="#addresses">Jump to Addresses</a>
+        </nav>
       </section>
 
-      <section className="section">
+      <section className="section" id="addresses">
         <h2 className="section-title">Addresses</h2>
         <div className="glass-panel">
           <div className="addr-grid">

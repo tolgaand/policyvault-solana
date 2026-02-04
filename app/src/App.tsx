@@ -59,9 +59,14 @@ export default function App() {
         <h1 className="topbar-title">
           PolicyVault <span className="badge">devnet</span>
         </h1>
-        <button className="btn-secondary" onClick={onOpenDemo}>
-          Open Demo
-        </button>
+        <nav className="topbar-nav">
+          <a className="topbar-link" href="#demo" onClick={onOpenDemo}>
+            Demo
+          </a>
+          <a className="topbar-link" href="#addresses">
+            Addresses
+          </a>
+        </nav>
       </header>
 
       <section className="hero">
