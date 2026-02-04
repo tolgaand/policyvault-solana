@@ -22,6 +22,9 @@ describe("policyvault", () => {
   // Track current sequence across tests for PDA derivation.
   let nextSeq = 0;
 
+  // Track policy version (increments on each set_policy / set_policy_advanced)
+  let policyVersion = 1;
+
   // Remember audit sequences created in this run so close tests are stable.
   let firstAuditSeq = null;
   let cooldownAuditSeq = null;
@@ -101,6 +104,10 @@ describe("policyvault", () => {
     assert.ok(policy.vault.equals(vaultPda));
     assert.ok(policy.authority.equals(owner.publicKey));
 
+    // Policy version starts at 1.
+    policyVersion = policy.policyVersion;
+    assert.strictEqual(policyVersion, 1);
+
     // Keep tests stable across reruns (if PDAs already exist).
     nextSeq = policy.nextSequence.toNumber();
   });
@@ -150,6 +157,7 @@ describe("policyvault", () => {
     assert.ok(audit.amount.eq(amount));
     assert.strictEqual(audit.allowed, true);
     assert.strictEqual(audit.reasonCode, 1); // REASON_OK
+    assert.strictEqual(audit.policyVersion, policyVersion);
 
     // Verify SOL actually transferred
     const recipientBalAfter = await provider.connection.getBalance(
@@ -194,6 +202,7 @@ describe("policyvault", () => {
     const audit = await program.account.auditEvent.fetch(auditPdaKey);
     assert.strictEqual(audit.allowed, false);
     assert.strictEqual(audit.reasonCode, 3); // REASON_COOLDOWN
+    assert.strictEqual(audit.policyVersion, policyVersion);
 
     // No SOL should have moved
     const recipientBalAfter = await provider.connection.getBalance(
@@ -234,6 +243,7 @@ describe("policyvault", () => {
     const audit = await program.account.auditEvent.fetch(auditPdaKey);
     assert.strictEqual(audit.allowed, false);
     assert.strictEqual(audit.reasonCode, 2); // REASON_BUDGET_EXCEEDED
+    assert.strictEqual(audit.policyVersion, policyVersion);
 
     // No SOL should have moved
     const recipientBalAfter = await provider.connection.getBalance(
@@ -301,6 +311,9 @@ describe("policyvault", () => {
     assert.ok(policy.dailyBudgetLamports.eq(newBudget));
     assert.strictEqual(policy.cooldownSeconds, newCooldown);
     assert.ok(policy.agent.equals(agentKp.publicKey));
+
+    policyVersion += 1;
+    assert.strictEqual(policy.policyVersion, policyVersion);
   });
 
   it("D.5) spend_intent — allowed after cooldown disabled via set_policy", async () => {
@@ -329,6 +342,7 @@ describe("policyvault", () => {
     const audit = await program.account.auditEvent.fetch(auditPdaKey);
     assert.strictEqual(audit.allowed, true);
     assert.strictEqual(audit.reasonCode, 1);
+    assert.strictEqual(audit.policyVersion, policyVersion);
 
     // Verify SOL transferred
     const recipientBalAfter = await provider.connection.getBalance(
@@ -367,6 +381,12 @@ describe("policyvault", () => {
       })
       .rpc();
 
+    policyVersion += 1;
+    {
+      const p = await program.account.policy.fetch(policyPda);
+      assert.strictEqual(p.policyVersion, policyVersion);
+    }
+
     {
       const seq = nextSeq;
       const [auditPdaKey] = auditPda(seq);
@@ -395,6 +415,7 @@ describe("policyvault", () => {
       const audit = await program.account.auditEvent.fetch(auditPdaKey);
       assert.strictEqual(audit.allowed, false);
       assert.strictEqual(audit.reasonCode, 5); // REASON_PAUSED
+      assert.strictEqual(audit.policyVersion, policyVersion);
 
       const recipientBalAfter = await provider.connection.getBalance(
         recipient.publicKey
@@ -420,6 +441,12 @@ describe("policyvault", () => {
         authority: owner.publicKey,
       })
       .rpc();
+
+    policyVersion += 1;
+    {
+      const p = await program.account.policy.fetch(policyPda);
+      assert.strictEqual(p.policyVersion, policyVersion);
+    }
 
     {
       const seq = nextSeq;
@@ -449,6 +476,7 @@ describe("policyvault", () => {
       const audit = await program.account.auditEvent.fetch(auditPdaKey);
       assert.strictEqual(audit.allowed, false);
       assert.strictEqual(audit.reasonCode, 6); // REASON_RECIPIENT_NOT_ALLOWED
+      assert.strictEqual(audit.policyVersion, policyVersion);
 
       const recipientBalAfter = await provider.connection.getBalance(
         recipient.publicKey
@@ -473,6 +501,12 @@ describe("policyvault", () => {
         authority: owner.publicKey,
       })
       .rpc();
+
+    policyVersion += 1;
+    {
+      const p = await program.account.policy.fetch(policyPda);
+      assert.strictEqual(p.policyVersion, policyVersion);
+    }
 
     {
       const seq = nextSeq;
@@ -502,6 +536,7 @@ describe("policyvault", () => {
       const audit = await program.account.auditEvent.fetch(auditPdaKey);
       assert.strictEqual(audit.allowed, true);
       assert.strictEqual(audit.reasonCode, 1);
+      assert.strictEqual(audit.policyVersion, policyVersion);
 
       const recipientBalAfter = await provider.connection.getBalance(
         recipient.publicKey
@@ -540,6 +575,7 @@ describe("policyvault", () => {
       const audit = await program.account.auditEvent.fetch(auditPdaKey);
       assert.strictEqual(audit.allowed, false);
       assert.strictEqual(audit.reasonCode, 7); // REASON_RECIPIENT_CAP_EXCEEDED
+      assert.strictEqual(audit.policyVersion, policyVersion);
 
       const recipientBalAfter = await provider.connection.getBalance(
         recipient.publicKey
