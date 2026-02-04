@@ -200,6 +200,111 @@ export default function DemoApp() {
     dayIndex?: unknown
   }>(null)
 
+  const preflight = useMemo(() => {
+    if (!wallet.connected) return null
+    if (!policySnapshot) return { status: 'missing' as const }
+
+    const nowTs = Math.floor(Date.now() / 1000)
+    const currentDayIndex = Math.floor(nowTs / 86400)
+    const currentDayIndexBig = BigInt(currentDayIndex)
+
+    const spendLamportsNumber = Number.isFinite(spendAmountSol) ? lamports(spendAmountSol) : NaN
+    const spendLamports = Number.isFinite(spendLamportsNumber) ? BigInt(spendLamportsNumber) : null
+
+    const policyDayIndex = toBigInt(policySnapshot.dayIndex)
+    let spentTodayPolicy = toBigInt(policySnapshot.spentTodayLamports) ?? 0n
+    if (policyDayIndex !== null && policyDayIndex !== currentDayIndexBig) {
+      spentTodayPolicy = 0n
+    }
+
+    const recipientDayIndex = toBigInt(recipientSpendSnapshot?.dayIndex)
+    let spentTodayRecipient = recipientSpendSnapshot ? toBigInt(recipientSpendSnapshot.spentTodayLamports) ?? 0n : null
+    if (recipientSpendSnapshot && recipientDayIndex !== null && recipientDayIndex !== currentDayIndexBig) {
+      spentTodayRecipient = 0n
+    }
+
+    const dailyBudgetLamports = Number.isFinite(dailyBudgetSol) ? BigInt(lamports(dailyBudgetSol)) : null
+    const perRecipientCapLamports = Number.isFinite(perRecipientCapSol) ? BigInt(lamports(perRecipientCapSol)) : null
+    const cooldownSecondsValue = Number.isFinite(cooldownSeconds) ? cooldownSeconds : 0
+
+    const recipientStr = (recipientAddress || (wallet.publicKey?.toBase58() ?? '')).trim()
+    const recipientPk = tryParsePubkey(recipientStr)
+    const allowedCandidate = (allowedRecipient || recipientAddress || (wallet.publicKey?.toBase58() ?? '')).trim()
+    const allowedPk = allowlistEnabled ? tryParsePubkey(allowedCandidate) : null
+
+    let allowed = true
+    let reasonCode = 1
+
+    if (spendLamports === null || spendLamports <= 0n) {
+      allowed = false
+      reasonCode = 4
+    } else if (paused) {
+      allowed = false
+      reasonCode = 5
+    } else if (allowlistEnabled) {
+      if (!recipientPk || !allowedPk || recipientPk.toBase58() !== allowedPk.toBase58()) {
+        allowed = false
+        reasonCode = 6
+      }
+    }
+
+    if (allowed && spendLamports !== null && dailyBudgetLamports !== null) {
+      if (spendLamports + spentTodayPolicy > dailyBudgetLamports) {
+        allowed = false
+        reasonCode = 2
+      }
+    }
+
+    if (allowed && cooldownSecondsValue > 0) {
+      const lastSpendTs = toBigInt(policySnapshot.lastSpendTs)
+      if (lastSpendTs !== null) {
+        const since = nowTs - Number(lastSpendTs)
+        if (Number.isFinite(since) && since < cooldownSecondsValue) {
+          allowed = false
+          reasonCode = 3
+        }
+      }
+    }
+
+    if (allowed && spendLamports !== null && perRecipientCapLamports !== null && spentTodayRecipient !== null) {
+      if (spendLamports + spentTodayRecipient > perRecipientCapLamports) {
+        allowed = false
+        reasonCode = 7
+      }
+    }
+
+    const remainingBudget =
+      dailyBudgetLamports !== null ? (dailyBudgetLamports > spentTodayPolicy ? dailyBudgetLamports - spentTodayPolicy : 0n) : null
+    const remainingCap =
+      perRecipientCapLamports !== null && spentTodayRecipient !== null
+        ? perRecipientCapLamports > spentTodayRecipient
+          ? perRecipientCapLamports - spentTodayRecipient
+          : 0n
+        : null
+
+    return {
+      status: 'ready' as const,
+      allowed,
+      reasonCode,
+      remainingBudget,
+      remainingCap,
+      recipientSnapshotMissing: !recipientSpendSnapshot,
+    }
+  }, [
+    wallet.connected,
+    wallet.publicKey,
+    policySnapshot,
+    recipientSpendSnapshot,
+    spendAmountSol,
+    paused,
+    allowlistEnabled,
+    allowedRecipient,
+    perRecipientCapSol,
+    dailyBudgetSol,
+    cooldownSeconds,
+    recipientAddress,
+  ])
+
   const pushLog = (label: string, sig: string) => setLogs((l) => [{ label, sig }, ...l])
 
   async function runAction(label: string, fn: () => Promise<void>) {
@@ -709,6 +814,41 @@ export default function DemoApp() {
             </div>
           )}
         </div>
+
+        {wallet.connected && (
+          <div className="glass-panel">
+            <h3 className="panel-header">Preflight (spend_intent_v2)</h3>
+            {!preflight || preflight.status === 'missing' ? (
+              <p className="tx-empty">Fetch on-chain state first to predict the next spend.</p>
+            ) : (
+              <>
+                <div className="addr-grid">
+                  <div className="addr-row">
+                    <span className="addr-label">prediction</span>
+                    <code className="addr-value">{preflight.allowed ? 'allowed' : 'denied'}</code>
+                  </div>
+                  <div className="addr-row">
+                    <span className="addr-label">reason</span>
+                    <code className="addr-value">{formatReason(preflight.reasonCode)}</code>
+                  </div>
+                  <div className="addr-row">
+                    <span className="addr-label">remaining_budget</span>
+                    <code className="addr-value">{preflight.remainingBudget !== null ? formatLamports(preflight.remainingBudget) : '—'}</code>
+                  </div>
+                  <div className="addr-row">
+                    <span className="addr-label">remaining_recipient_cap</span>
+                    <code className="addr-value">{preflight.remainingCap !== null ? formatLamports(preflight.remainingCap) : '—'}</code>
+                  </div>
+                </div>
+                {preflight.recipientSnapshotMissing && (
+                  <p className="demo-hint" style={{ marginTop: 10 }}>
+                    RecipientSpend snapshot missing — per-recipient cap prediction may be incomplete.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         <div className="glass-panel">
           <h3 className="panel-header">Audit Trail</h3>
