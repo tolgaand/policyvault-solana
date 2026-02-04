@@ -14,20 +14,21 @@
 /* ── Edges ────────────────────────────────────────── */
 .flow-edge {
   fill: none;
-  stroke: var(--neon-cyan);
+  stroke: var(--brand-purple-2);
   stroke-width: 1.5;
   stroke-dasharray: 8 6;
   stroke-linecap: round;
-  opacity: 0.6;
+  opacity: 0.5;
   animation: flow-dash 1.2s linear infinite;
 }
 
 .flow-edge--allowed {
-  stroke: #0f6;
+  stroke: var(--brand-green);
 }
 
 .flow-edge--denied {
-  stroke: var(--neon-magenta);
+  stroke: var(--brand-red);
+  opacity: 0.6;
 }
 
 @keyframes flow-dash {
@@ -38,19 +39,20 @@
 
 /* ── Branch labels ───────────────────────────────── */
 .flow-branch-label {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 11px;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-anchor: middle;
-  fill: var(--text-dim);
+  fill: var(--muted);
 }
 
 .flow-branch-label--allowed {
-  fill: #0f6;
+  fill: var(--brand-green);
 }
 
 .flow-branch-label--denied {
-  fill: var(--neon-magenta);
+  fill: var(--brand-red);
 }
 
 /* ── Nodes ────────────────────────────────────────── */
@@ -59,88 +61,69 @@
 }
 
 .flow-node-rect {
-  fill: var(--bg-panel);
-  stroke: var(--neon-cyan);
+  fill: #fff;
+  stroke: var(--brand-purple-2);
   stroke-width: 1;
   opacity: 0.9;
-  transition: stroke-width 0.2s, filter 0.2s;
+  transition: stroke-width 0.2s;
 }
 
 .flow-node:hover .flow-node-rect {
   stroke-width: 2;
-  filter: url(#glow-cyan);
 }
 
-/* agent node */
 .flow-node-rect--agent {
-  stroke: var(--neon-yellow);
+  stroke: var(--brand-purple);
 }
 
-.flow-node:hover .flow-node-rect--agent {
-  filter: none;
-  stroke-width: 2;
-}
-
-/* allowed path */
 .flow-node-rect--allowed {
-  stroke: #0f6;
+  stroke: var(--brand-green);
 }
 
-.flow-node:hover .flow-node-rect--allowed {
-  filter: none;
-  stroke-width: 2;
-}
-
-/* denied path */
 .flow-node-rect--denied {
-  stroke: var(--neon-magenta);
+  stroke: var(--brand-red);
 }
 
-.flow-node:hover .flow-node-rect--denied {
-  filter: url(#glow-magenta);
-}
-
-/* audit node */
 .flow-node-rect--audit {
-  stroke: var(--neon-cyan);
+  stroke: var(--brand-purple-2);
   stroke-dasharray: 4 3;
   animation: audit-pulse 3s ease-in-out infinite;
 }
 
 @keyframes audit-pulse {
-  0%, 100% { stroke-opacity: 0.5; }
+  0%, 100% { stroke-opacity: 0.4; }
   50% { stroke-opacity: 1; }
 }
 
 /* diamond (decision) */
 .flow-node-diamond {
-  fill: var(--bg-panel);
-  stroke: var(--neon-magenta);
+  fill: #fff;
+  stroke: var(--brand-purple);
   stroke-width: 1.5;
-  transition: stroke-width 0.2s, filter 0.2s;
+  transition: stroke-width 0.2s;
 }
 
 .flow-node--decision:hover .flow-node-diamond {
   stroke-width: 2.5;
-  filter: url(#glow-magenta);
 }
 
 /* ── Node text ───────────────────────────────────── */
 .flow-node-text {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 12px;
-  fill: var(--text-primary);
+  font-weight: 500;
+  fill: var(--text);
   text-anchor: middle;
   dominant-baseline: central;
   pointer-events: none;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .flow-node-text--decision {
   font-size: 10px;
-  fill: var(--neon-magenta);
-  font-family: var(--font-display);
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  fill: var(--brand-purple);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -149,12 +132,12 @@
   .flow-edge {
     animation: none;
     stroke-dasharray: none;
-    opacity: 0.45;
+    opacity: 0.4;
   }
 
   .flow-node-rect--audit {
     animation: none;
-    stroke-opacity: 0.7;
+    stroke-opacity: 0.6;
   }
 }
 

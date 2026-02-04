@@ -1,32 +1,34 @@
-/* PolicyVault UI — Rivalz-like clean theme (no cyberpunk) */
+/* PolicyVault — Clean Rivalz-like theme */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Surfaces */
   --bg: #ffffff;
   --surface: #ffffff;
   --surface-2: rgba(17, 24, 39, 0.03);
+
+  /* Text */
   --text: #0b1020;
   --muted: rgba(11, 16, 32, 0.55);
-  --border: rgba(11, 16, 32, 0.12);
 
+  /* Borders & shadows */
+  --border: rgba(11, 16, 32, 0.10);
+  --shadow-sm: 0 1px 3px rgba(11, 16, 32, 0.06);
+  --shadow-md: 0 4px 16px rgba(11, 16, 32, 0.08);
+  --shadow-lg: 0 8px 32px rgba(11, 16, 32, 0.10);
+
+  /* Brand */
   --brand-purple: #463174;
   --brand-purple-2: #4c50b3;
   --brand-pink: #c170d7;
-  --brand-yellow: #f5bb00;
+  --brand-green: #16a34a;
+  --brand-red: #dc2626;
 
-  /* Back-compat for existing component CSS (App.css) */
-  --bg-deep: var(--bg);
-  --bg-panel: rgba(255, 255, 255, 0.86);
-  --border-glow: var(--border);
-  --text-primary: var(--text);
-  --text-dim: var(--muted);
-  --neon-cyan: var(--brand-purple-2);
-  --neon-magenta: var(--brand-pink);
-  --neon-yellow: var(--brand-yellow);
-  --font-mono: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --font-display: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  /* Typography */
+  --font-sans: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.55;
   font-weight: 400;
   color: var(--text);
@@ -41,7 +43,7 @@ body {
   margin: 0;
   min-height: 100vh;
   min-width: 320px;
-  background: radial-gradient(1200px 700px at 50% -200px, rgba(76, 80, 179, 0.12), transparent 55%), var(--bg);
+  background: var(--bg);
 }
 
 #root {
@@ -57,25 +59,25 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Buttons */
+/* ── Buttons (global base) ───────────────────────── */
 button {
-  font-family: inherit;
-  font-size: 0.95rem;
-  padding: 10px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--brand-purple-2);
   border-radius: 0;
-  border: 1px solid rgba(76, 80, 179, 0.28);
   background: var(--brand-purple-2);
   color: #fff;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
-  transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 }
 
 button:hover:not(:disabled) {
-  background: #4248ad;
-  box-shadow: 0 10px 24px rgba(76, 80, 179, 0.18);
+  background: #3d42a0;
+  border-color: #3d42a0;
+  box-shadow: var(--shadow-sm);
 }
 
 button:active:not(:disabled) {
@@ -83,37 +85,51 @@ button:active:not(:disabled) {
 }
 
 button:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 button:focus-visible {
-  outline: 2px solid rgba(76, 80, 179, 0.55);
+  outline: 2px solid rgba(76, 80, 179, 0.5);
   outline-offset: 2px;
 }
 
-/* Secondary buttons can be applied via className="btn-secondary" */
+/* Secondary variant */
 button.btn-secondary {
-  background: #ffffff;
+  background: #fff;
   color: var(--brand-purple);
-  border-color: rgba(11, 16, 32, 0.14);
+  border-color: var(--border);
 }
 
 button.btn-secondary:hover:not(:disabled) {
-  background: rgba(76, 80, 179, 0.06);
-  border-color: rgba(76, 80, 179, 0.28);
+  background: rgba(76, 80, 179, 0.05);
+  border-color: var(--brand-purple-2);
 }
 
-/* Inputs */
+/* Ghost variant (small utility buttons like Copy) */
+button.btn-ghost {
+  background: transparent;
+  color: var(--brand-purple-2);
+  border-color: var(--border);
+  font-size: 0.75rem;
+  padding: 0.35rem 0.6rem;
+}
+
+button.btn-ghost:hover:not(:disabled) {
+  background: rgba(76, 80, 179, 0.05);
+  border-color: var(--brand-purple-2);
+}
+
+/* ── Inputs (global base) ────────────────────────── */
 input {
-  font-family: inherit;
-  font-size: 0.95rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 0;
   color: var(--text);
-  padding: 10px 12px;
-  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 input::placeholder {
@@ -122,11 +138,12 @@ input::placeholder {
 
 input:focus {
   outline: none;
-  border-color: rgba(76, 80, 179, 0.55);
-  box-shadow: 0 0 0 3px rgba(76, 80, 179, 0.12);
+  border-color: var(--brand-purple-2);
+  box-shadow: 0 0 0 3px rgba(76, 80, 179, 0.10);
 }
 
 input:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
+  background: var(--surface-2);
 }

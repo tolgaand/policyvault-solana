@@ -30,55 +30,31 @@ export default function FlowDiagram() {
           recorded in an audit log.
         </desc>
         <defs>
-          {/* animated dash pattern */}
-          <pattern id="flow-grid" width="48" height="48" patternUnits="userSpaceOnUse">
-            <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(0,255,255,0.04)" strokeWidth="0.5" />
-          </pattern>
-
           {/* arrowheads */}
-          <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--neon-cyan)" opacity="0.75" />
+          <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--brand-purple-2)" opacity="0.7" />
           </marker>
           <marker id="arrow-allowed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0f6" opacity="0.85" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--brand-green)" opacity="0.8" />
           </marker>
           <marker id="arrow-denied" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--neon-magenta)" opacity="0.85" />
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--brand-red)" opacity="0.8" />
           </marker>
-
-          {/* neon glow filters */}
-          <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <filter id="glow-magenta" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
         </defs>
-
-        {/* subtle grid bg */}
-        <rect width="600" height="500" fill="url(#flow-grid)" />
 
         {/* ── Edges ─────────────────────────────────── */}
         {/* Agent -> Request */}
-        <line x1="300" y1="82" x2="300" y2="108" className="flow-edge" markerEnd="url(#arrow-cyan)" />
+        <line x1="300" y1="82" x2="300" y2="108" className="flow-edge" markerEnd="url(#arrow-default)" />
         {/* Request -> Check */}
-        <line x1="300" y1="152" x2="300" y2="205" className="flow-edge" markerEnd="url(#arrow-cyan)" />
+        <line x1="300" y1="152" x2="300" y2="205" className="flow-edge" markerEnd="url(#arrow-default)" />
         {/* Check -> Transfer (allowed) */}
         <polyline points="265,240 140,340" className="flow-edge flow-edge--allowed" markerEnd="url(#arrow-allowed)" />
         {/* Check -> Denied */}
         <polyline points="335,240 460,340" className="flow-edge flow-edge--denied" markerEnd="url(#arrow-denied)" />
         {/* Transfer -> Audit */}
-        <polyline points="140,382 300,448" className="flow-edge" markerEnd="url(#arrow-cyan)" />
+        <polyline points="140,382 300,448" className="flow-edge" markerEnd="url(#arrow-default)" />
         {/* Denied -> Audit */}
-        <polyline points="460,382 300,448" className="flow-edge" markerEnd="url(#arrow-cyan)" />
+        <polyline points="460,382 300,448" className="flow-edge" markerEnd="url(#arrow-default)" />
 
         {/* branch labels */}
         <text x="190" y="280" className="flow-branch-label flow-branch-label--allowed">Allowed</text>
