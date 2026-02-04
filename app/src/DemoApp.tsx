@@ -17,7 +17,6 @@ import './App.css'
 type TxLog = { label: string; sig: string }
 
 const REASON_CODE: Record<number, string> = {
-  0: 'OK',
   1: 'OK',
   2: 'BUDGET_EXCEEDED',
   3: 'COOLDOWN',
@@ -27,9 +26,24 @@ const REASON_CODE: Record<number, string> = {
   7: 'RECIPIENT_CAP_EXCEEDED',
 }
 
-function formatReason(code: number | null | undefined) {
-  if (code === null || code === undefined) return 'UNKNOWN'
-  return `${code} ${REASON_CODE[code] ?? 'UNKNOWN'}`
+function normalizeU16(v: unknown): number | null {
+  if (v === null || v === undefined) return null
+  if (typeof v === 'number') return v
+  if (typeof v === 'bigint') return Number(v)
+
+  // Anchor can decode integer fields as BN depending on IDL/typegen.
+  if (typeof v === 'object' && v && 'toNumber' in v) {
+    const anyV = v as { toNumber?: () => number }
+    if (typeof anyV.toNumber === 'function') return anyV.toNumber()
+  }
+
+  return null
+}
+
+function formatReason(code: unknown) {
+  const n = normalizeU16(code)
+  if (n === null) return 'UNKNOWN'
+  return `${n} ${REASON_CODE[n] ?? 'UNKNOWN'}`
 }
 
 function lamports(sol: number) {
