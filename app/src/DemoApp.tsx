@@ -16,6 +16,21 @@ import './App.css'
 
 type TxLog = { label: string; sig: string }
 
+const REASON_CODE: Record<number, string> = {
+  1: 'OK',
+  2: 'BUDGET_EXCEEDED',
+  3: 'COOLDOWN',
+  4: 'INVALID_AMOUNT',
+  5: 'PAUSED',
+  6: 'RECIPIENT_NOT_ALLOWED',
+  7: 'RECIPIENT_CAP_EXCEEDED',
+}
+
+function formatReason(code: number | null | undefined) {
+  if (!code) return 'UNKNOWN'
+  return `${code} ${REASON_CODE[code] ?? 'UNKNOWN'}`
+}
+
 function lamports(sol: number) {
   return Math.round(sol * web3.LAMPORTS_PER_SOL)
 }
@@ -233,7 +248,26 @@ export default function DemoApp() {
         })
         .rpc()
 
-      pushLog('spend_intent_v2', sig)
+      // Fetch audit_event to surface allow/deny + reason codes in the UI.
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const audit = (await (program as any).account.auditEvent.fetch(auditEvent)) as {
+          allowed?: boolean
+          reasonCode?: number
+          reason_code?: number
+          policyVersion?: number
+          policy_version?: number
+        }
+
+        const allowed = Boolean(audit.allowed)
+        const reason = formatReason(audit.reasonCode ?? audit.reason_code)
+        const version = audit.policyVersion ?? audit.policy_version
+
+        pushLog(`spend_intent_v2 (${allowed ? 'allowed' : 'denied'} · reason ${reason}${version ? ` · v${version}` : ''})`, sig)
+      } catch {
+        pushLog('spend_intent_v2', sig)
+      }
+
       await refreshPdas()
     })
   }
