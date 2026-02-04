@@ -4,7 +4,7 @@ Status legend: Todo | In Progress | Blocked | Done
 
 | ID | Task | Owner | Est. | Dependencies | Acceptance Criteria | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| S1-1 | Preflight spend_intent_v2 validation pipeline | Claude Code | 5 pts | None | Validation detects invalid fields and returns actionable errors | Todo |
+| S1-1 | Preflight spend_intent_v2 validation pipeline | Claude Code | 5 pts | None | Validation detects invalid fields and returns actionable errors | Done (2026-02-04: preflight.ts + tests + UI wiring) |
 | S1-2 | UI feedback for preflight errors | Claude Code | 3 pts | S1-1 | Errors are shown inline with guidance and no dead ends | Todo |
 | S1-3 | Audit Trail timeline view | Claude Code | 5 pts | None | Timeline lists decisions in order with key metadata | Done (2026-02-04: Added AuditTimeline component + tests) |
 | S1-4 | Audit Trail filters + export | Claude Code | 3 pts | S1-3 | Filters work and export produces usable output | Todo |
