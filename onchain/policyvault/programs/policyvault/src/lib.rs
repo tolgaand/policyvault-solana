@@ -158,6 +158,7 @@ pub mod policyvault {
         audit.amount = amount;
         audit.allowed = allowed;
         audit.reason_code = reason_code;
+        audit.policy_version = policy.policy_version;
 
         // Advance sequence counter.
         policy.next_sequence = policy.next_sequence.checked_add(1).unwrap();
@@ -183,6 +184,7 @@ pub mod policyvault {
         emit!(SpendRecorded {
             vault: ctx.accounts.vault.key(),
             policy: policy.key(),
+            policy_version: policy.policy_version,
             sequence: audit.sequence,
             recipient: ctx.accounts.recipient.key(),
             amount,
@@ -281,6 +283,7 @@ pub mod policyvault {
         audit.amount = amount;
         audit.allowed = allowed;
         audit.reason_code = reason_code;
+        audit.policy_version = policy.policy_version;
 
         // Advance sequence counter.
         policy.next_sequence = policy.next_sequence.checked_add(1).unwrap();
@@ -309,6 +312,7 @@ pub mod policyvault {
         emit!(SpendRecorded {
             vault: ctx.accounts.vault.key(),
             policy: policy.key(),
+            policy_version: policy.policy_version,
             sequence: audit.sequence,
             recipient: ctx.accounts.recipient.key(),
             amount,
@@ -376,18 +380,19 @@ impl Policy {
 
 #[account]
 pub struct AuditEvent {
-    pub policy: Pubkey,    // 32
-    pub sequence: u64,     // 8
-    pub ts: i64,           // 8
-    pub recipient: Pubkey, // 32
-    pub amount: u64,       // 8
-    pub allowed: bool,     // 1
-    pub reason_code: u16,  // 2
+    pub policy: Pubkey,     // 32
+    pub sequence: u64,      // 8
+    pub ts: i64,            // 8
+    pub recipient: Pubkey,  // 32
+    pub amount: u64,        // 8
+    pub allowed: bool,      // 1
+    pub reason_code: u16,   // 2
+    pub policy_version: u16 // 2
 }
 
-// 8 + 32 + 8 + 8 + 32 + 8 + 1 + 2 = 99
+// 8 + 32 + 8 + 8 + 32 + 8 + 1 + 2 + 2 = 101
 impl AuditEvent {
-    pub const SIZE: usize = 8 + 32 + 8 + 8 + 32 + 8 + 1 + 2;
+    pub const SIZE: usize = 8 + 32 + 8 + 8 + 32 + 8 + 1 + 2 + 2;
 }
 
 #[account]
@@ -563,6 +568,7 @@ pub struct CloseAuditEvent<'info> {
 pub struct SpendRecorded {
     pub vault: Pubkey,
     pub policy: Pubkey,
+    pub policy_version: u16,
     pub sequence: u64,
     pub recipient: Pubkey,
     pub amount: u64,
