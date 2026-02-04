@@ -40,7 +40,15 @@ export default function App() {
   const onOpenDemo = useMemo(
     () => () => {
       setShouldLoad(true)
-      document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+      const prefersReducedMotion =
+        typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+          ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          : false
+
+      document
+        .getElementById('demo')
+        ?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' })
     },
     [setShouldLoad],
   )
