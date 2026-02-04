@@ -39,19 +39,17 @@ onchain-test:
 .PHONY: onchain-test-local
 onchain-test-local:
 	@if ! command -v cargo-build-sbf >/dev/null 2>&1; then \
-		echo "error: cargo-build-sbf not found. Install Solana/Agave CLI v2.x (used in CI: $(SOLANA_CLI_VERSION)) so Anchor can build SBF."; \
-		echo "       (In CI we run: sh -c \"$$(curl -sSfL https://release.anza.xyz/$(SOLANA_CLI_VERSION)/install)\")"; \
+		echo "error: cargo-build-sbf not found. Install Solana/Agave CLI v2.x so Anchor can build SBF."; \
+		echo "       tip: ensure v2.x is on PATH: export PATH=\"$$HOME/.local/share/solana/install/active_release/bin:$$PATH\""; \
 		exit 1; \
 	fi
-	@mkdir -p .keypairs
-	@if [ ! -f $(LOCALNET_KEYPAIR) ]; then \
-		solana-keygen new --no-bip39-passphrase -o $(LOCALNET_KEYPAIR) >/dev/null; \
+	@if [ ! -f $(KEYPAIR) ]; then \
+		echo "error: missing $(KEYPAIR) (devnet deployer keypair)."; \
+		echo "       (Never commit keypairs; place it under .keypairs/ locally.)"; \
+		exit 1; \
 	fi
 	./scripts/sync-program-keypair.sh
-	cd $(ONCHAIN_DIR) && \
-		ANCHOR_WALLET=../../$(LOCALNET_KEYPAIR) \
-		ANCHOR_PROVIDER_URL=$(LOCALNET_RPC) \
-		anchor test --provider.cluster localnet --provider.wallet ../../$(LOCALNET_KEYPAIR)
+	cd $(ONCHAIN_DIR) && npm run anchor:test
 
 .PHONY: deploy
 deploy:
