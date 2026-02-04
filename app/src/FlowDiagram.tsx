@@ -35,6 +35,17 @@ export default function FlowDiagram() {
             <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(0,255,255,0.04)" strokeWidth="0.5" />
           </pattern>
 
+          {/* arrowheads */}
+          <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--neon-cyan)" opacity="0.75" />
+          </marker>
+          <marker id="arrow-allowed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0f6" opacity="0.85" />
+          </marker>
+          <marker id="arrow-denied" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--neon-magenta)" opacity="0.85" />
+          </marker>
+
           {/* neon glow filters */}
           <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
             <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
@@ -57,17 +68,17 @@ export default function FlowDiagram() {
 
         {/* ── Edges ─────────────────────────────────── */}
         {/* Agent -> Request */}
-        <line x1="300" y1="82" x2="300" y2="108" className="flow-edge" />
+        <line x1="300" y1="82" x2="300" y2="108" className="flow-edge" markerEnd="url(#arrow-cyan)" />
         {/* Request -> Check */}
-        <line x1="300" y1="152" x2="300" y2="205" className="flow-edge" />
+        <line x1="300" y1="152" x2="300" y2="205" className="flow-edge" markerEnd="url(#arrow-cyan)" />
         {/* Check -> Transfer (allowed) */}
-        <polyline points="265,240 140,340" className="flow-edge flow-edge--allowed" />
+        <polyline points="265,240 140,340" className="flow-edge flow-edge--allowed" markerEnd="url(#arrow-allowed)" />
         {/* Check -> Denied */}
-        <polyline points="335,240 460,340" className="flow-edge flow-edge--denied" />
+        <polyline points="335,240 460,340" className="flow-edge flow-edge--denied" markerEnd="url(#arrow-denied)" />
         {/* Transfer -> Audit */}
-        <polyline points="140,382 300,448" className="flow-edge" />
+        <polyline points="140,382 300,448" className="flow-edge" markerEnd="url(#arrow-cyan)" />
         {/* Denied -> Audit */}
-        <polyline points="460,382 300,448" className="flow-edge" />
+        <polyline points="460,382 300,448" className="flow-edge" markerEnd="url(#arrow-cyan)" />
 
         {/* branch labels */}
         <text x="190" y="280" className="flow-branch-label flow-branch-label--allowed">Allowed</text>
