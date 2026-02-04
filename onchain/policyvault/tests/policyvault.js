@@ -612,4 +612,68 @@ describe("policyvault", () => {
       );
     }
   });
+
+  it("E.3) close_recipient_spend — non-authority rejected", async () => {
+    const [recipientSpendKey] = recipientSpendPda(recipient.publicKey);
+    const rando = anchor.web3.Keypair.generate();
+
+    const sig = await provider.connection.requestAirdrop(
+      rando.publicKey,
+      LAMPORTS_PER_SOL / 10
+    );
+    await provider.connection.confirmTransaction(sig);
+
+    try {
+      await program.methods
+        .closeRecipientSpend()
+        .accounts({
+          recipientSpend: recipientSpendKey,
+          policy: policyPda,
+          recipient: recipient.publicKey,
+          authority: rando.publicKey,
+        })
+        .signers([rando])
+        .rpc();
+      assert.fail("Should have thrown Unauthorized");
+    } catch (err) {
+      assert.ok(
+        err.toString().includes("Unauthorized"),
+        `Expected Unauthorized error, got: ${err}`
+      );
+    }
+  });
+
+  it("E.4) close_recipient_spend — authority reclaims rent", async () => {
+    const [recipientSpendKey] = recipientSpendPda(recipient.publicKey);
+
+    // Confirm account exists before closing
+    const rsBefore = await program.account.recipientSpend.fetch(
+      recipientSpendKey
+    );
+    assert.ok(rsBefore.policy.equals(policyPda));
+    assert.ok(rsBefore.recipient.equals(recipient.publicKey));
+
+    const authorityBalBefore = await provider.connection.getBalance(
+      owner.publicKey
+    );
+
+    const tx = await program.methods
+      .closeRecipientSpend()
+      .accounts({
+        recipientSpend: recipientSpendKey,
+        policy: policyPda,
+        recipient: recipient.publicKey,
+        authority: owner.publicKey,
+      })
+      .rpc();
+    console.log("  close_recipient_spend tx:", tx);
+
+    const rsInfo = await provider.connection.getAccountInfo(recipientSpendKey);
+    assert.strictEqual(rsInfo, null);
+
+    const authorityBalAfter = await provider.connection.getBalance(
+      owner.publicKey
+    );
+    assert.ok(authorityBalAfter > authorityBalBefore - 10_000);
+  });
 });

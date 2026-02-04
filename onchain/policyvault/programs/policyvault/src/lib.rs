@@ -334,6 +334,17 @@ pub mod policyvault {
         // The `close` constraint in the Accounts struct handles lamport transfer.
         Ok(())
     }
+
+    /// E.3) Reclaim rent from a per-recipient spend tracker. Authority only.
+    pub fn close_recipient_spend(ctx: Context<CloseRecipientSpend>) -> Result<()> {
+        require_keys_eq!(
+            ctx.accounts.authority.key(),
+            ctx.accounts.policy.authority,
+            VaultError::Unauthorized
+        );
+        // The `close` constraint in the Accounts struct handles lamport transfer.
+        Ok(())
+    }
 }
 
 // ──────────────── Accounts ────────────────
@@ -558,6 +569,23 @@ pub struct CloseAuditEvent<'info> {
         bump = policy.bump,
     )]
     pub policy: Account<'info, Policy>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CloseRecipientSpend<'info> {
+    #[account(
+        mut,
+        close = authority,
+        has_one = policy,
+        seeds = [b"recipient", policy.key().as_ref(), recipient.key().as_ref()],
+        bump = recipient_spend.bump,
+    )]
+    pub recipient_spend: Account<'info, RecipientSpend>,
+    pub policy: Account<'info, Policy>,
+    /// CHECK: Only used for PDA derivation.
+    pub recipient: UncheckedAccount<'info>,
     #[account(mut)]
     pub authority: Signer<'info>,
 }
