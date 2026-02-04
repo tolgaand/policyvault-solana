@@ -117,6 +117,42 @@ export default function DemoApp() {
   const [cooldownSeconds, setCooldownSeconds] = useState(60)
   const [spendAmountSol, setSpendAmountSol] = useState(0.1)
 
+  function applyPreset(preset: 'budget_only' | 'paused' | 'allowlist_cap') {
+    const self = wallet.publicKey?.toBase58() ?? ''
+
+    if (preset === 'budget_only') {
+      setPaused(false)
+      setAllowlistEnabled(false)
+      setAllowedRecipient('')
+      setPerRecipientCapSol(0.25)
+      setDailyBudgetSol(0.5)
+      setCooldownSeconds(60)
+      setSpendAmountSol(0.1)
+      return
+    }
+
+    if (preset === 'paused') {
+      setPaused(true)
+      setAllowlistEnabled(false)
+      setAllowedRecipient('')
+      setPerRecipientCapSol(0.25)
+      setDailyBudgetSol(0.5)
+      setCooldownSeconds(60)
+      setSpendAmountSol(0.1)
+      return
+    }
+
+    // allowlist_cap
+    setPaused(false)
+    setAllowlistEnabled(true)
+    setAllowedRecipient(self)
+    setRecipientAddress(self)
+    setPerRecipientCapSol(0.25)
+    setDailyBudgetSol(0.5)
+    setCooldownSeconds(0)
+    setSpendAmountSol(0.1)
+  }
+
   // Advanced policy knobs (wired to set_policy_advanced + spend_intent_v2)
   const [paused, setPaused] = useState(false)
   const [allowlistEnabled, setAllowlistEnabled] = useState(false)
@@ -405,6 +441,22 @@ export default function DemoApp() {
 
         <div className="glass-panel">
           <h3 className="panel-header">Policy Parameters</h3>
+          <p className="demo-hint">
+            Quick presets (edit local inputs only). Then click <code>set_policy</code> / <code>set_policy_advanced</code> to
+            apply on-chain.
+          </p>
+          <div className="action-row" style={{ flexWrap: 'wrap' }}>
+            <button className="btn-secondary" type="button" onClick={() => applyPreset('budget_only')}>
+              Preset: Budget + Cooldown
+            </button>
+            <button className="btn-secondary" type="button" onClick={() => applyPreset('paused')}>
+              Preset: Paused (Kill switch)
+            </button>
+            <button className="btn-secondary" type="button" onClick={() => applyPreset('allowlist_cap')}>
+              Preset: Allowlist + Cap (v2)
+            </button>
+          </div>
+
           <div className="param-grid">
             <div className="param-group">
               <span className="param-label">Daily budget (SOL)</span>

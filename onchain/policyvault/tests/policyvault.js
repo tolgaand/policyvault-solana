@@ -53,11 +53,7 @@ describe("policyvault", () => {
   // Helper: derive per-recipient spend tracker PDA.
   function recipientSpendPda(recipientPk) {
     return PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("recipient"),
-        policyPda.toBuffer(),
-        recipientPk.toBuffer(),
-      ],
+      [Buffer.from("recipient"), policyPda.toBuffer(), recipientPk.toBuffer()],
       program.programId
     );
   }

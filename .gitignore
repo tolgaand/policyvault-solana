@@ -9,3 +9,6 @@ node_modules
 # Build
 /dist
 /target
+
+# OpenClaw (local automation state)
+.openclaw-state/
