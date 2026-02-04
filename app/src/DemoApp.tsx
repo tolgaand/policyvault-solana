@@ -46,7 +46,36 @@ function formatReason(code: unknown) {
   return `${n} ${REASON_CODE[n] ?? 'UNKNOWN'}`
 }
 
-function lamports(sol: number) {
+function toBigInt(v: unknown): bigint | null {
+  if (v === null || v === undefined) return null
+  if (typeof v === 'bigint') return v
+  if (typeof v === 'number') return BigInt(Math.trunc(v))
+
+  // Anchor decodes u64 as BN.
+  if (typeof v === 'object' && v && 'toString' in v) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const s = (v as any).toString()
+      return BigInt(s)
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
+function formatLamports(v: unknown): string {
+  const bi = toBigInt(v)
+  if (bi === null) return '—'
+
+  // Display both lamports and a human SOL approximation.
+  const sol = Number(bi) / web3.LAMPORTS_PER_SOL
+  const solStr = Number.isFinite(sol) ? sol.toFixed(6).replace(/0+$/, '').replace(/\.$/, '') : '…'
+  return `${bi.toString()} lamports (${solStr} SOL)`
+}
+
+function lamports(sol: number) { 
   return Math.round(sol * web3.LAMPORTS_PER_SOL)
 }
 
@@ -97,6 +126,26 @@ export default function DemoApp() {
 
   const [uiError, setUiError] = useState<string | null>(null)
 
+  const [policySnapshot, setPolicySnapshot] = useState<null | {
+    dailyBudgetLamports?: unknown
+    spentTodayLamports?: unknown
+    dayIndex?: unknown
+    cooldownSeconds?: unknown
+    lastSpendTs?: unknown
+    nextSequence?: unknown
+    paused?: boolean
+    allowlistEnabled?: boolean
+    allowedRecipient?: unknown
+    perRecipientDailyCapLamports?: unknown
+    policyVersion?: unknown
+    agent?: unknown
+  }>(null)
+
+  const [recipientSpendSnapshot, setRecipientSpendSnapshot] = useState<null | {
+    spentTodayLamports?: unknown
+    dayIndex?: unknown
+  }>(null)
+
   const pushLog = (label: string, sig: string) => setLogs((l) => [{ label, sig }, ...l])
 
   async function runAction(label: string, fn: () => Promise<void>) {
@@ -120,6 +169,53 @@ export default function DemoApp() {
     const [policy] = await derivePolicyPda(vault)
     setVaultPda(vault.toBase58())
     setPolicyPda(policy.toBase58())
+  }
+
+  async function fetchOnchainState() {
+    await runAction('fetch_onchain_state', async () => {
+      const { program, owner } = await ensureWallet()
+      const [vault] = await deriveVaultPda(owner)
+      const [policy] = await derivePolicyPda(vault)
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const p = (await (program as any).account.policy.fetch(policy)) as any
+      setPolicySnapshot({
+        dailyBudgetLamports: p.dailyBudgetLamports ?? p.daily_budget_lamports,
+        spentTodayLamports: p.spentTodayLamports ?? p.spent_today_lamports,
+        dayIndex: p.dayIndex ?? p.day_index,
+        cooldownSeconds: p.cooldownSeconds ?? p.cooldown_seconds,
+        lastSpendTs: p.lastSpendTs ?? p.last_spend_ts,
+        nextSequence: p.nextSequence ?? p.next_sequence,
+        paused: Boolean(p.paused),
+        allowlistEnabled: Boolean(p.allowlistEnabled ?? p.allowlist_enabled),
+        allowedRecipient: p.allowedRecipient ?? p.allowed_recipient,
+        perRecipientDailyCapLamports: p.perRecipientDailyCapLamports ?? p.per_recipient_daily_cap_lamports,
+        policyVersion: p.policyVersion ?? p.policy_version,
+        agent: p.agent,
+      })
+
+      // RecipientSpend is optional; only fetch if a recipient can be parsed.
+      const recipientStr = (recipientAddress || owner.toBase58()).trim()
+      const recipientPk = tryParsePubkey(recipientStr)
+      if (!recipientPk) {
+        setRecipientSpendSnapshot(null)
+        return
+      }
+
+      const [recipientSpend] = await deriveRecipientSpendPda(policy, recipientPk)
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rs = (await (program as any).account.recipientSpend.fetch(recipientSpend)) as any
+        setRecipientSpendSnapshot({
+          spentTodayLamports: rs.spentTodayLamports ?? rs.spent_today_lamports,
+          dayIndex: rs.dayIndex ?? rs.day_index,
+        })
+      } catch {
+        setRecipientSpendSnapshot(null)
+      }
+
+      await refreshPdas()
+    })
   }
 
   async function copy(text: string) {
@@ -407,6 +503,84 @@ export default function DemoApp() {
               </div>
             </div>
           </details>
+        </div>
+
+        <div className="glass-panel">
+          <h3 className="panel-header">On-chain Policy Snapshot</h3>
+          <p className="demo-hint">
+            Pull the current <code>Policy</code> + (optional) <code>RecipientSpend</code> accounts from devnet.
+          </p>
+
+          <div className="action-row">
+            <button className="btn-secondary" disabled={!wallet.connected} onClick={fetchOnchainState}>
+              fetch on-chain state
+            </button>
+          </div>
+
+          {policySnapshot ? (
+            <div className="addr-grid">
+              <div className="addr-row">
+                <span className="addr-label">policy_version</span>
+                <code className="addr-value">{String(policySnapshot.policyVersion ?? '—')}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">paused</span>
+                <code className="addr-value">{String(Boolean(policySnapshot.paused))}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">allowlist_enabled</span>
+                <code className="addr-value">{String(Boolean(policySnapshot.allowlistEnabled))}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">allowed_recipient</span>
+                <code className="addr-value">{policySnapshot.allowedRecipient ? String(policySnapshot.allowedRecipient) : '—'}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">daily_budget</span>
+                <code className="addr-value">{formatLamports(policySnapshot.dailyBudgetLamports)}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">spent_today</span>
+                <code className="addr-value">{formatLamports(policySnapshot.spentTodayLamports)}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">per_recipient_daily_cap</span>
+                <code className="addr-value">{formatLamports(policySnapshot.perRecipientDailyCapLamports)}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">cooldown_seconds</span>
+                <code className="addr-value">{String(policySnapshot.cooldownSeconds ?? '—')}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">last_spend_ts</span>
+                <code className="addr-value">{String(policySnapshot.lastSpendTs ?? '—')}</code>
+              </div>
+              <div className="addr-row">
+                <span className="addr-label">next_sequence</span>
+                <code className="addr-value">{String(policySnapshot.nextSequence ?? '—')}</code>
+              </div>
+            </div>
+          ) : (
+            <p className="tx-empty">No snapshot loaded yet.</p>
+          )}
+
+          {recipientSpendSnapshot && (
+            <div style={{ marginTop: 12 }}>
+              <h4 className="panel-header" style={{ fontSize: 12, marginTop: 8 }}>
+                RecipientSpend (for recipient field)
+              </h4>
+              <div className="addr-grid">
+                <div className="addr-row">
+                  <span className="addr-label">spent_today</span>
+                  <code className="addr-value">{formatLamports(recipientSpendSnapshot.spentTodayLamports)}</code>
+                </div>
+                <div className="addr-row">
+                  <span className="addr-label">day_index</span>
+                  <code className="addr-value">{String(recipientSpendSnapshot.dayIndex ?? '—')}</code>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="glass-panel">
