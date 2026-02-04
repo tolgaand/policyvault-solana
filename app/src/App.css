@@ -453,3 +453,129 @@ details[open] > .accordion-summary::after {
     gap: 0.3rem;
   }
 }
+
+/* ── Audit timeline ───────────────────────────────── */
+.audit-timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 0.75rem;
+  padding-left: 0.95rem;
+}
+
+.audit-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.35rem;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  width: 2px;
+  background: linear-gradient(to bottom, rgba(76, 80, 179, 0.35), rgba(76, 80, 179, 0.08));
+}
+
+.audit-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 0.6rem 1fr;
+  column-gap: 0.7rem;
+  align-items: start;
+}
+
+.audit-marker {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid rgba(76, 80, 179, 0.55);
+  margin-top: 0.5rem;
+}
+
+.audit-card {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem 0.85rem;
+}
+
+.audit-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: baseline;
+  margin-bottom: 0.55rem;
+}
+
+.audit-seq {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.audit-reason {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.audit-badge {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid transparent;
+}
+
+.audit-badge--allow {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.audit-badge--deny {
+  color: #7f1d1d;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.audit-meta {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.audit-meta-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.65rem;
+}
+
+.audit-meta-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.audit-meta-value {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--ink);
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  overflow: hidden;
+}
+
+.audit-pk {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-ghost--tiny {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 520px) {
+  .audit-meta-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -13,6 +13,7 @@ import {
   programId,
 } from './policyvault'
 import { runPreflight, REASON_LABELS, type PolicySnapshot, type RecipientSpendSnapshot } from './preflight'
+import AuditTimeline from './AuditTimeline'
 import './App.css'
 
 type TxLog = { label: string; sig: string }
@@ -816,21 +817,13 @@ export default function DemoApp() {
           {auditEvents.length === 0 ? (
             <p className="tx-empty">No audit events loaded yet.</p>
           ) : (
-            <ul className="tx-list">
-              {auditEvents.map((event) => (
-                <li key={event.sequence.toString()} className="tx-item" style={{ alignItems: 'flex-start' }}>
-                  <span className="tx-label">#{event.sequence.toString()}</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', overflow: 'hidden' }}>
-                    <span>
-                      allowed: {String(event.allowed)} · reason: {formatReason(event.reasonCode)} · amount:{' '}
-                      {formatLamports(event.amount)}
-                    </span>
-                    <span className="tx-sig">recipient: {event.recipient}</span>
-                    <span className="tx-sig">ts: {formatTimestamp(event.ts)}</span>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <AuditTimeline
+              events={auditEvents}
+              formatReason={formatReason}
+              formatLamports={formatLamports}
+              formatTimestamp={formatTimestamp}
+              onCopy={copy}
+            />
           )}
         </div>
 
