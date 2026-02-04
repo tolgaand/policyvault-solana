@@ -56,7 +56,6 @@
 /* ── Nodes ────────────────────────────────────────── */
 .flow-node {
   cursor: default;
-  outline: none;
 }
 
 .flow-node-rect {
@@ -67,17 +66,9 @@
   transition: stroke-width 0.2s, filter 0.2s;
 }
 
-.flow-node:hover .flow-node-rect,
-.flow-node:focus-visible .flow-node-rect {
+.flow-node:hover .flow-node-rect {
   stroke-width: 2;
   filter: url(#glow-cyan);
-}
-
-.flow-node:focus-visible .flow-node-rect,
-.flow-node:focus-visible .flow-node-diamond {
-  stroke-width: 2.5;
-  stroke-dasharray: none;
-  outline: none;
 }
 
 /* agent node */
@@ -85,8 +76,7 @@
   stroke: var(--neon-yellow);
 }
 
-.flow-node:hover .flow-node-rect--agent,
-.flow-node:focus-visible .flow-node-rect--agent {
+.flow-node:hover .flow-node-rect--agent {
   filter: none;
   stroke-width: 2;
 }
@@ -96,8 +86,7 @@
   stroke: #0f6;
 }
 
-.flow-node:hover .flow-node-rect--allowed,
-.flow-node:focus-visible .flow-node-rect--allowed {
+.flow-node:hover .flow-node-rect--allowed {
   filter: none;
   stroke-width: 2;
 }
@@ -107,8 +96,7 @@
   stroke: var(--neon-magenta);
 }
 
-.flow-node:hover .flow-node-rect--denied,
-.flow-node:focus-visible .flow-node-rect--denied {
+.flow-node:hover .flow-node-rect--denied {
   filter: url(#glow-magenta);
 }
 
@@ -132,8 +120,7 @@
   transition: stroke-width 0.2s, filter 0.2s;
 }
 
-.flow-node--decision:hover .flow-node-diamond,
-.flow-node--decision:focus-visible .flow-node-diamond {
+.flow-node--decision:hover .flow-node-diamond {
   stroke-width: 2.5;
   filter: url(#glow-magenta);
 }

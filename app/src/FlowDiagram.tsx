@@ -11,14 +11,24 @@ const nodes = [
 
 export default function FlowDiagram() {
   return (
-    <div className="flow-diagram" role="img" aria-label="PolicyVault flow diagram: an agent sends a spending request, which goes through a policy check. If allowed, the transfer executes. If denied, the reason is logged. Both paths feed into the audit log.">
+    <div
+      className="flow-diagram"
+      role="img"
+      aria-label="PolicyVault flow diagram: an agent sends a spending request, which goes through a policy check. If allowed, the transfer executes. If denied, the reason is logged. Both paths feed into the audit log."
+    >
       <svg
         viewBox="0 60 600 440"
         xmlns="http://www.w3.org/2000/svg"
         className="flow-svg"
+        role="presentation"
         aria-hidden="true"
         focusable="false"
       >
+        <title>PolicyVault flow diagram</title>
+        <desc>
+          Agent submits a spending request, then a policy check either allows a transfer or denies with a reason. Both are
+          recorded in an audit log.
+        </desc>
         <defs>
           {/* animated dash pattern */}
           <pattern id="flow-grid" width="48" height="48" patternUnits="userSpaceOnUse">
@@ -65,39 +75,101 @@ export default function FlowDiagram() {
 
         {/* ── Nodes ─────────────────────────────────── */}
         {/* Agent */}
-        <g className="flow-node" tabIndex={0} role="button" aria-label="Agent: the AI agent that initiates spending">
-          <rect x={nodes[0].x - nodes[0].w / 2} y={nodes[0].y - nodes[0].h / 2} width={nodes[0].w} height={nodes[0].h} rx="4" className="flow-node-rect flow-node-rect--agent" />
-          <text x={nodes[0].x} y={nodes[0].y + 5} className="flow-node-text">{nodes[0].label}</text>
+        <g className="flow-node" aria-label="Agent: the AI agent that initiates spending">
+          <title>Agent</title>
+          <desc>The AI agent that initiates spending.</desc>
+          <rect
+            x={nodes[0].x - nodes[0].w / 2}
+            y={nodes[0].y - nodes[0].h / 2}
+            width={nodes[0].w}
+            height={nodes[0].h}
+            rx="4"
+            className="flow-node-rect flow-node-rect--agent"
+          />
+          <text x={nodes[0].x} y={nodes[0].y + 5} className="flow-node-text">
+            {nodes[0].label}
+          </text>
         </g>
 
         {/* Spending Request */}
-        <g className="flow-node" tabIndex={0} role="button" aria-label="Spending Request: the agent submits a spend intent">
-          <rect x={nodes[1].x - nodes[1].w / 2} y={nodes[1].y - nodes[1].h / 2} width={nodes[1].w} height={nodes[1].h} rx="4" className="flow-node-rect" />
-          <text x={nodes[1].x} y={nodes[1].y + 5} className="flow-node-text">{nodes[1].label}</text>
+        <g className="flow-node" aria-label="Spending Request: the agent submits a spend intent">
+          <title>Spending Request</title>
+          <desc>The agent submits a spend intent.</desc>
+          <rect
+            x={nodes[1].x - nodes[1].w / 2}
+            y={nodes[1].y - nodes[1].h / 2}
+            width={nodes[1].w}
+            height={nodes[1].h}
+            rx="4"
+            className="flow-node-rect"
+          />
+          <text x={nodes[1].x} y={nodes[1].y + 5} className="flow-node-text">
+            {nodes[1].label}
+          </text>
         </g>
 
         {/* Policy Check (diamond) */}
-        <g className="flow-node flow-node--decision" tabIndex={0} role="button" aria-label="Policy Check: validates the request against budget and cooldown rules">
+        <g
+          className="flow-node flow-node--decision"
+          aria-label="Policy Check: validates the request against budget, cooldown, pause, allowlist, and per-recipient cap rules"
+        >
+          <title>Policy Check</title>
+          <desc>Validates the request against budget, cooldown, pause, allowlist, and per-recipient cap rules.</desc>
           <polygon points="300,200 345,240 300,280 255,240" className="flow-node-diamond" />
-          <text x="300" y="244" className="flow-node-text flow-node-text--decision">{nodes[2].label}</text>
+          <text x="300" y="244" className="flow-node-text flow-node-text--decision">
+            {nodes[2].label}
+          </text>
         </g>
 
         {/* Transfer (allowed) */}
-        <g className="flow-node" tabIndex={0} role="button" aria-label="Transfer: SOL is transferred from the vault">
-          <rect x={nodes[3].x - nodes[3].w / 2} y={nodes[3].y - nodes[3].h / 2} width={nodes[3].w} height={nodes[3].h} rx="4" className="flow-node-rect flow-node-rect--allowed" />
-          <text x={nodes[3].x} y={nodes[3].y + 5} className="flow-node-text">{nodes[3].label}</text>
+        <g className="flow-node" aria-label="Transfer: SOL is transferred from the vault">
+          <title>Transfer</title>
+          <desc>SOL is transferred from the vault to the recipient.</desc>
+          <rect
+            x={nodes[3].x - nodes[3].w / 2}
+            y={nodes[3].y - nodes[3].h / 2}
+            width={nodes[3].w}
+            height={nodes[3].h}
+            rx="4"
+            className="flow-node-rect flow-node-rect--allowed"
+          />
+          <text x={nodes[3].x} y={nodes[3].y + 5} className="flow-node-text">
+            {nodes[3].label}
+          </text>
         </g>
 
         {/* Denied (Reason + Log) */}
-        <g className="flow-node" tabIndex={0} role="button" aria-label="Reason and Log: the denial reason is recorded">
-          <rect x={nodes[4].x - nodes[4].w / 2} y={nodes[4].y - nodes[4].h / 2} width={nodes[4].w} height={nodes[4].h} rx="4" className="flow-node-rect flow-node-rect--denied" />
-          <text x={nodes[4].x} y={nodes[4].y + 5} className="flow-node-text">{nodes[4].label}</text>
+        <g className="flow-node" aria-label="Reason and Log: the denial reason is recorded">
+          <title>Reason + Log</title>
+          <desc>The denial reason is recorded in the audit trail.</desc>
+          <rect
+            x={nodes[4].x - nodes[4].w / 2}
+            y={nodes[4].y - nodes[4].h / 2}
+            width={nodes[4].w}
+            height={nodes[4].h}
+            rx="4"
+            className="flow-node-rect flow-node-rect--denied"
+          />
+          <text x={nodes[4].x} y={nodes[4].y + 5} className="flow-node-text">
+            {nodes[4].label}
+          </text>
         </g>
 
         {/* Audit Log */}
-        <g className="flow-node" tabIndex={0} role="button" aria-label="Audit Log: all transactions are recorded on-chain">
-          <rect x={nodes[5].x - nodes[5].w / 2} y={nodes[5].y - nodes[5].h / 2} width={nodes[5].w} height={nodes[5].h} rx="4" className="flow-node-rect flow-node-rect--audit" />
-          <text x={nodes[5].x} y={nodes[5].y + 5} className="flow-node-text">{nodes[5].label}</text>
+        <g className="flow-node" aria-label="Audit Log: all transactions are recorded on-chain">
+          <title>Audit Log</title>
+          <desc>All transactions are recorded on-chain.</desc>
+          <rect
+            x={nodes[5].x - nodes[5].w / 2}
+            y={nodes[5].y - nodes[5].h / 2}
+            width={nodes[5].w}
+            height={nodes[5].h}
+            rx="4"
+            className="flow-node-rect flow-node-rect--audit"
+          />
+          <text x={nodes[5].x} y={nodes[5].y + 5} className="flow-node-text">
+            {nodes[5].label}
+          </text>
         </g>
       </svg>
     </div>
