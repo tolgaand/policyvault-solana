@@ -239,6 +239,12 @@
   font-size: 0.78rem;
 }
 
+.demo-connect-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 1rem 0;
+}
+
 /* ── Glass panel ──────────────────────────────────── */
 .glass-panel {
   width: 100%;
