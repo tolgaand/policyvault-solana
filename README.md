@@ -9,18 +9,31 @@ Give an AI agent a wallet and you’re stuck with two bad choices:
 PolicyVault solves this by letting agents spend **only under explicit rules**. Funds live in a guarded vault, and every spend attempt must pass policy checks before it can execute.
 
 ## What it does
-- **Controlled spending:** set budget limits, cooldowns, and approval rules before the agent can spend
+- **Controlled spending:** set budget limits, cooldowns, per-recipient caps, and optional allowlists before the agent can spend
 - **Auditable trail:** every attempt is recorded — what the agent tried, when, and whether it was allowed or denied
-- **Owner control:** update policies anytime, pause instantly with a kill switch *(coming soon)*, and review all activity
+- **Owner control:** update policies anytime, pause instantly with a kill switch, and review all activity
 
 ## How it works (conceptually)
 1. Create a **Vault** (where funds live)
-2. Define a **Policy** (rules like daily cap, rate limits, approvals)
+2. Define a **Policy** (rules like daily cap, cooldown, pause/kill switch, allowlist, per-recipient cap)
 3. The agent sends a **Spending Request** (“I want to spend X for Y”)
 4. PolicyVault evaluates the request:
    - If it matches policy → **Allowed**
-   - If not → **Denied** (with reason)
+   - If not → **Denied** (with a reason code)
 5. Everything is logged for later review
+
+### Denial reason codes
+The program records a numeric `reason_code` for each spend attempt (see `programs/policyvault/src/lib.rs`).
+
+| Code | Meaning |
+|------|---------|
+| 1 | OK |
+| 2 | BUDGET_EXCEEDED |
+| 3 | COOLDOWN |
+| 4 | INVALID_AMOUNT |
+| 5 | PAUSED |
+| 6 | RECIPIENT_NOT_ALLOWED |
+| 7 | RECIPIENT_CAP_EXCEEDED |
 
 ## Why now
 AI agents are increasingly taking real actions: paying for APIs, subscriptions, infra, and procurement. PolicyVault provides **guardrails + enforcement + auditability**, so agents can operate without uncontrolled financial risk.
