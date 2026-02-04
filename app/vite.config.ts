@@ -21,6 +21,14 @@ export default defineConfig({
             return 'wallet'
           }
 
+          // Split core frameworks from the generic vendor chunk.
+          if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) {
+            return 'react'
+          }
+
+          // NOTE: Avoid splitting Solana client deps into their own chunk here.
+          // Some transitive deps create circular chunk graphs (vendor <-> solana).
+
           return 'vendor'
         },
       },
