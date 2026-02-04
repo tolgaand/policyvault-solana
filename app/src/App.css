@@ -246,6 +246,21 @@
   box-sizing: border-box;
 }
 
+/* ── Field-level errors ──────────────────────────── */
+.param-group.has-error input {
+  border-color: var(--brand-red, #dc2626);
+}
+
+.param-group.has-error .param-label {
+  color: var(--brand-red, #dc2626);
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: var(--brand-red, #dc2626);
+  line-height: 1.4;
+}
+
 /* ── Action buttons row ───────────────────────────── */
 .action-row {
   display: flex;

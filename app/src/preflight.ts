@@ -94,6 +94,19 @@ export type PreflightResult = {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Field-error helpers                                               */
+/* ------------------------------------------------------------------ */
+
+/** Build a field → messages map from preflight errors for inline UI rendering. */
+export function buildFieldErrors(errors: PreflightError[]): Record<string, string[]> {
+  const map: Record<string, string[]> = {}
+  for (const err of errors) {
+    ;(map[err.field] ??= []).push(err.message)
+  }
+  return map
+}
+
+/* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
 /* ------------------------------------------------------------------ */
 
