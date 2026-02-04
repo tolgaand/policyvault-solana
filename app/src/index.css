@@ -48,10 +48,16 @@ body::after {
     0deg,
     transparent,
     transparent 2px,
-    rgba(0,255,255,0.015) 2px,
-    rgba(0,255,255,0.015) 4px
+    rgba(0,255,255,0.008) 2px,
+    rgba(0,255,255,0.008) 4px
   );
   animation: scanline-scroll 8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after {
+    animation: none;
+  }
 }
 @keyframes scanline-scroll {
   from { background-position: 0 0; }
@@ -108,7 +114,7 @@ button:focus-visible {
 }
 
 /* ── Inputs ───────────────────────────────────────── */
-input[type="number"] {
+input {
   font-family: var(--font-mono);
   font-size: 0.9rem;
   background: rgba(0, 255, 255, 0.04);
@@ -116,12 +122,22 @@ input[type="number"] {
   border-radius: 2px;
   color: var(--text-primary);
   padding: 0.45em 0.6em;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
-input[type="number"]:focus {
+
+input::placeholder {
+  color: rgba(224, 230, 237, 0.35);
+}
+
+input:focus {
   outline: none;
   border-color: var(--neon-cyan);
   box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+}
+
+input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* ── Scrollbar ────────────────────────────────────── */
