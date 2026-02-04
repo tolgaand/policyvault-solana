@@ -14,6 +14,18 @@
   --brand-pink: #c170d7;
   --brand-yellow: #f5bb00;
 
+  /* Back-compat for existing component CSS (App.css) */
+  --bg-deep: var(--bg);
+  --bg-panel: rgba(255, 255, 255, 0.86);
+  --border-glow: var(--border);
+  --text-primary: var(--text);
+  --text-dim: var(--muted);
+  --neon-cyan: var(--brand-purple-2);
+  --neon-magenta: var(--brand-pink);
+  --neon-yellow: var(--brand-yellow);
+  --font-mono: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --font-display: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+
   font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   line-height: 1.55;
   font-weight: 400;

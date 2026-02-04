@@ -1,4 +1,5 @@
 import '@solana/wallet-adapter-react-ui/styles.css'
+import './wallet-ui.css'
 
 import DemoApp from './DemoApp'
 import { Providers } from './Providers'

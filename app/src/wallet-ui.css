@@ -1,0 +1,58 @@
+/* Wallet Adapter UI overrides — match Rivalz-like theme */
+
+.wallet-adapter-button {
+  font-family: inherit !important;
+  border-radius: 0 !important;
+  border: 1px solid var(--brand-pink) !important;
+  background: var(--brand-yellow) !important;
+  color: var(--brand-purple) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+.wallet-adapter-button:hover {
+  filter: brightness(1.02);
+}
+
+.wallet-adapter-modal-wrapper {
+  background: rgba(11, 16, 32, 0.45) !important;
+  backdrop-filter: blur(6px) grayscale(1);
+}
+
+.wallet-adapter-modal {
+  border-radius: 0 !important;
+  background: #fff !important;
+  border: 1px solid rgba(11, 16, 32, 0.12) !important;
+  box-shadow: 0 18px 60px rgba(11, 16, 32, 0.18) !important;
+}
+
+.wallet-adapter-modal-title {
+  font-family: inherit !important;
+  color: var(--brand-purple) !important;
+  letter-spacing: 0.02em;
+}
+
+.wallet-adapter-modal-list {
+  margin: 0 !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button {
+  width: 100% !important;
+  justify-content: space-between;
+  background: rgba(76, 80, 179, 0.08) !important;
+  border: 1px solid rgba(76, 80, 179, 0.22) !important;
+  color: var(--brand-purple) !important;
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+}
+
+.wallet-adapter-modal-list .wallet-adapter-button:hover {
+  background: rgba(76, 80, 179, 0.12) !important;
+}
+
+.wallet-adapter-modal-button-close {
+  border: none !important;
+  background: transparent !important;
+}
