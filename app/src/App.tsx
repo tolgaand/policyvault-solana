@@ -65,10 +65,6 @@ export default function App() {
       </header>
 
       <section className="hero">
-        <div className="hero-banner">
-          <img src="/assets/policyvault-banner.jpeg" alt="PolicyVault banner" className="hero-img" />
-          <div className="hero-overlay" />
-        </div>
         <div className="hero-body">
           <h2 className="hero-headline">Policy-enforced spending vaults for AI&nbsp;agents</h2>
           <p className="hero-subhead">

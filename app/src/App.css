@@ -531,3 +531,91 @@ details[open] > .accordion-summary::after {
 .alert-error strong {
   color: var(--neon-magenta);
 }
+
+/* ── Clean Rivalz-like overrides (reduce mismatch) ───────────────────────── */
+.topbar {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--border-glow);
+  backdrop-filter: blur(10px);
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--brand-purple);
+  text-shadow: none;
+}
+
+.topbar-title .badge {
+  border: 1px solid rgba(76, 80, 179, 0.25);
+  color: rgba(76, 80, 179, 0.9);
+  text-shadow: none;
+}
+
+.hero {
+  background: radial-gradient(1000px 420px at 50% -120px, rgba(76, 80, 179, 0.18), transparent 60%);
+}
+
+.hero-banner {
+  display: none;
+}
+
+.hero-body {
+  position: relative;
+  padding: 4.5rem 2rem 3.75rem;
+}
+
+.hero-headline {
+  color: var(--text-primary);
+  text-shadow: none;
+  font-size: 2.1rem;
+  letter-spacing: -0.01em;
+}
+
+.hero-subhead {
+  color: var(--text-dim);
+  font-size: 1rem;
+}
+
+.section-title {
+  color: var(--brand-purple);
+  text-shadow: none;
+}
+
+.feature-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glow);
+  box-shadow: 0 14px 40px rgba(11, 16, 32, 0.06);
+}
+
+.feature-icon {
+  color: var(--brand-purple-2);
+  text-shadow: none;
+}
+
+.glass-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glow);
+  box-shadow: 0 18px 60px rgba(11, 16, 32, 0.08);
+}
+
+.panel-header {
+  color: var(--brand-purple);
+  text-shadow: none;
+}
+
+.addr-row {
+  border: 1px solid rgba(11, 16, 32, 0.10);
+  background: rgba(76, 80, 179, 0.03);
+}
+
+.alert-error {
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.alert-error strong {
+  color: rgba(220, 38, 38, 0.9);
+}
