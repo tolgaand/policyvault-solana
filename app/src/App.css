@@ -510,3 +510,18 @@ details[open] > .accordion-summary::after {
   opacity: 0.7;
   margin-left: 0.5rem;
 }
+
+/* ── Inline error banner ─────────────────────────── */
+.alert-error {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 0, 255, 0.22);
+  background: rgba(255, 0, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.9rem;
+}
+
+.alert-error strong {
+  color: var(--neon-magenta);
+}

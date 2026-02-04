@@ -25,6 +25,14 @@ function parsePubkey(s: string): PublicKey {
   return new PublicKey(s.trim())
 }
 
+function tryParsePubkey(s: string): PublicKey | null {
+  try {
+    return parsePubkey(s)
+  } catch {
+    return null
+  }
+}
+
 export default function App() {
   const { connection } = useConnection()
   const wallet = useWallet()
@@ -58,7 +66,20 @@ export default function App() {
   const [perRecipientCapSol, setPerRecipientCapSol] = useState(0.25)
   const [recipientAddress, setRecipientAddress] = useState('')
 
+  const [uiError, setUiError] = useState<string | null>(null)
+
   const pushLog = (label: string, sig: string) => setLogs((l) => [{ label, sig }, ...l])
+
+  async function runAction(label: string, fn: () => Promise<void>) {
+    setUiError(null)
+    try {
+      await fn()
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setUiError(`${label}: ${msg}`)
+      console.error(label, e)
+    }
+  }
 
   async function refreshPdas() {
     if (!wallet.publicKey) {
@@ -83,121 +104,139 @@ export default function App() {
   }
 
   async function onInitVault() {
-    const { program, owner } = await ensureWallet()
-    const [vault] = await deriveVaultPda(owner)
+    await runAction('initialize_vault', async () => {
+      const { program, owner } = await ensureWallet()
+      const [vault] = await deriveVaultPda(owner)
 
-    const sig = await program.methods
-      .initializeVault()
-      .accounts({ vault, owner, systemProgram: web3.SystemProgram.programId })
-      .rpc()
+      const sig = await program.methods
+        .initializeVault()
+        .accounts({ vault, owner, systemProgram: web3.SystemProgram.programId })
+        .rpc()
 
-    pushLog('initialize_vault', sig)
-    await refreshPdas()
+      pushLog('initialize_vault', sig)
+      await refreshPdas()
+    })
   }
 
   async function onInitPolicy() {
-    const { program, owner } = await ensureWallet()
-    const [vault] = await deriveVaultPda(owner)
-    const [policy] = await derivePolicyPda(vault)
+    await runAction('initialize_policy', async () => {
+      const { program, owner } = await ensureWallet()
+      const [vault] = await deriveVaultPda(owner)
+      const [policy] = await derivePolicyPda(vault)
 
-    const sig = await program.methods
-      .initializePolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds, null)
-      .accounts({ policy, vault, owner, systemProgram: web3.SystemProgram.programId })
-      .rpc()
+      const sig = await program.methods
+        .initializePolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds, null)
+        .accounts({ policy, vault, owner, systemProgram: web3.SystemProgram.programId })
+        .rpc()
 
-    pushLog('initialize_policy', sig)
-    await refreshPdas()
+      pushLog('initialize_policy', sig)
+      await refreshPdas()
+    })
   }
 
   async function onSetPolicy() {
-    const { program, owner } = await ensureWallet()
-    const [vault] = await deriveVaultPda(owner)
-    const [policy] = await derivePolicyPda(vault)
+    await runAction('set_policy', async () => {
+      const { program, owner } = await ensureWallet()
+      const [vault] = await deriveVaultPda(owner)
+      const [policy] = await derivePolicyPda(vault)
 
-    const sig = await program.methods
-      .setPolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds, null)
-      .accounts({ policy, vault, authority: owner })
-      .rpc()
+      const sig = await program.methods
+        .setPolicy(new BN(lamports(dailyBudgetSol)), cooldownSeconds, null)
+        .accounts({ policy, vault, authority: owner })
+        .rpc()
 
-    pushLog('set_policy', sig)
-    await refreshPdas()
+      pushLog('set_policy', sig)
+      await refreshPdas()
+    })
   }
 
   async function onSetPolicyAdvanced() {
-    const { program, owner } = await ensureWallet()
-    const [vault] = await deriveVaultPda(owner)
-    const [policy] = await derivePolicyPda(vault)
+    await runAction('set_policy_advanced', async () => {
+      const { program, owner } = await ensureWallet()
+      const [vault] = await deriveVaultPda(owner)
+      const [policy] = await derivePolicyPda(vault)
 
-    const allowedRecipientOption = allowlistEnabled
-      ? parsePubkey((allowedRecipient || recipientAddress || owner.toBase58()).trim())
-      : null
+      let allowedRecipientOption: PublicKey | null = null
+      if (allowlistEnabled) {
+        const candidate = (allowedRecipient || recipientAddress || owner.toBase58()).trim()
+        const pk = tryParsePubkey(candidate)
+        if (!pk) throw new Error('Invalid allowed recipient pubkey')
+        allowedRecipientOption = pk
+      }
 
-    const sig = await program.methods
-      .setPolicyAdvanced(
-        new BN(lamports(dailyBudgetSol)),
-        cooldownSeconds,
-        null,
-        paused,
-        allowlistEnabled,
-        allowedRecipientOption,
-        new BN(lamports(perRecipientCapSol)),
-      )
-      .accounts({ policy, vault, authority: owner })
-      .rpc()
+      const sig = await program.methods
+        .setPolicyAdvanced(
+          new BN(lamports(dailyBudgetSol)),
+          cooldownSeconds,
+          null,
+          paused,
+          allowlistEnabled,
+          allowedRecipientOption,
+          new BN(lamports(perRecipientCapSol)),
+        )
+        .accounts({ policy, vault, authority: owner })
+        .rpc()
 
-    pushLog('set_policy_advanced', sig)
-    await refreshPdas()
+      pushLog('set_policy_advanced', sig)
+      await refreshPdas()
+    })
   }
 
   async function onSpendIntent() {
-    const { program, owner } = await ensureWallet()
-    const [vault] = await deriveVaultPda(owner)
-    const [policy] = await derivePolicyPda(vault)
+    await runAction('spend_intent', async () => {
+      const { program, owner } = await ensureWallet()
+      const [vault] = await deriveVaultPda(owner)
+      const [policy] = await derivePolicyPda(vault)
 
-    const sig = await program.methods
-      .spendIntent(new BN(lamports(spendAmountSol)))
-      .accounts({ vault, policy, recipient: owner, caller: owner, systemProgram: web3.SystemProgram.programId })
-      .rpc()
+      const sig = await program.methods
+        .spendIntent(new BN(lamports(spendAmountSol)))
+        .accounts({ vault, policy, recipient: owner, caller: owner, systemProgram: web3.SystemProgram.programId })
+        .rpc()
 
-    pushLog('spend_intent', sig)
-    await refreshPdas()
+      pushLog('spend_intent', sig)
+      await refreshPdas()
+    })
   }
 
   async function onSpendIntentV2() {
-    const { program, owner } = await ensureWallet()
-    const [vault] = await deriveVaultPda(owner)
-    const [policy] = await derivePolicyPda(vault)
+    await runAction('spend_intent_v2', async () => {
+      const { program, owner } = await ensureWallet()
+      const [vault] = await deriveVaultPda(owner)
+      const [policy] = await derivePolicyPda(vault)
 
-    const recipientPk = parsePubkey((recipientAddress || owner.toBase58()).trim())
+      const recipientStr = (recipientAddress || owner.toBase58()).trim()
+      const recipientPk = tryParsePubkey(recipientStr)
+      if (!recipientPk) throw new Error('Invalid recipient pubkey')
 
-    // PDA seeds for audit_event include policy.next_sequence, so we fetch the policy first.
-    const policyAcct = (await (
-      program as unknown as {
-        account: { policy: { fetch: (pk: PublicKey) => Promise<unknown> } }
-      }
-    ).account.policy.fetch(policy)) as { nextSequence?: BN; next_sequence?: BN }
+      // PDA seeds for audit_event include policy.next_sequence, so we fetch the policy first.
+      const policyAcct = (await (
+        program as unknown as {
+          account: { policy: { fetch: (pk: PublicKey) => Promise<unknown> } }
+        }
+      ).account.policy.fetch(policy)) as { nextSequence?: BN; next_sequence?: BN }
 
-    const nextSeq: BN | undefined = policyAcct.nextSequence ?? policyAcct.next_sequence
-    if (!nextSeq) throw new Error('Failed to read policy.next_sequence')
+      const nextSeq: BN | undefined = policyAcct.nextSequence ?? policyAcct.next_sequence
+      if (!nextSeq) throw new Error('Failed to read policy.next_sequence')
 
-    const [auditEvent] = await deriveAuditEventPda(policy, nextSeq)
-    const [recipientSpend] = await deriveRecipientSpendPda(policy, recipientPk)
+      const [auditEvent] = await deriveAuditEventPda(policy, nextSeq)
+      const [recipientSpend] = await deriveRecipientSpendPda(policy, recipientPk)
 
-    const sig = await program.methods
-      .spendIntentV2(new BN(lamports(spendAmountSol)))
-      .accounts({
-        auditEvent,
-        recipientSpend,
-        policy,
-        vault,
-        recipient: recipientPk,
-        caller: owner,
-        systemProgram: web3.SystemProgram.programId,
-      })
-      .rpc()
+      const sig = await program.methods
+        .spendIntentV2(new BN(lamports(spendAmountSol)))
+        .accounts({
+          auditEvent,
+          recipientSpend,
+          policy,
+          vault,
+          recipient: recipientPk,
+          caller: owner,
+          systemProgram: web3.SystemProgram.programId,
+        })
+        .rpc()
 
-    pushLog('spend_intent_v2', sig)
-    await refreshPdas()
+      pushLog('spend_intent_v2', sig)
+      await refreshPdas()
+    })
   }
 
   return (
@@ -274,6 +313,12 @@ export default function App() {
             <code>spend_intent</code>
             <span className="demo-hint-muted"> (open Advanced for pause/allowlist/caps + spend_intent_v2)</span>
           </p>
+
+          {uiError && (
+            <div className="alert-error" role="alert">
+              <strong>Action failed:</strong> {uiError}
+            </div>
+          )}
 
           {/* Controls */}
           <div className="glass-panel">
