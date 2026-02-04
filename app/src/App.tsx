@@ -1,9 +1,17 @@
 import { useMemo, useState } from 'react'
 import { AnchorProvider, web3, BN } from '@coral-xyz/anchor'
+import { PublicKey } from '@solana/web3.js'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 
-import { derivePolicyPda, deriveVaultPda, getProgram, programId } from './policyvault'
+import {
+  deriveAuditEventPda,
+  derivePolicyPda,
+  deriveRecipientSpendPda,
+  deriveVaultPda,
+  getProgram,
+  programId,
+} from './policyvault'
 import FlowDiagram from './FlowDiagram'
 import './App.css'
 
@@ -11,6 +19,10 @@ type TxLog = { label: string; sig: string }
 
 function lamports(sol: number) {
   return Math.round(sol * web3.LAMPORTS_PER_SOL)
+}
+
+function parsePubkey(s: string): PublicKey {
+  return new PublicKey(s.trim())
 }
 
 export default function App() {
@@ -38,6 +50,13 @@ export default function App() {
   const [dailyBudgetSol, setDailyBudgetSol] = useState(0.5)
   const [cooldownSeconds, setCooldownSeconds] = useState(60)
   const [spendAmountSol, setSpendAmountSol] = useState(0.1)
+
+  // Advanced policy knobs (wired to set_policy_advanced + spend_intent_v2)
+  const [paused, setPaused] = useState(false)
+  const [allowlistEnabled, setAllowlistEnabled] = useState(false)
+  const [allowedRecipient, setAllowedRecipient] = useState('')
+  const [perRecipientCapSol, setPerRecipientCapSol] = useState(0.25)
+  const [recipientAddress, setRecipientAddress] = useState('')
 
   const pushLog = (label: string, sig: string) => setLogs((l) => [{ label, sig }, ...l])
 
@@ -104,6 +123,32 @@ export default function App() {
     await refreshPdas()
   }
 
+  async function onSetPolicyAdvanced() {
+    const { program, owner } = await ensureWallet()
+    const [vault] = await deriveVaultPda(owner)
+    const [policy] = await derivePolicyPda(vault)
+
+    const allowedRecipientOption = allowlistEnabled
+      ? parsePubkey((allowedRecipient || recipientAddress || owner.toBase58()).trim())
+      : null
+
+    const sig = await program.methods
+      .setPolicyAdvanced(
+        new BN(lamports(dailyBudgetSol)),
+        cooldownSeconds,
+        null,
+        paused,
+        allowlistEnabled,
+        allowedRecipientOption,
+        new BN(lamports(perRecipientCapSol)),
+      )
+      .accounts({ policy, vault, authority: owner })
+      .rpc()
+
+    pushLog('set_policy_advanced', sig)
+    await refreshPdas()
+  }
+
   async function onSpendIntent() {
     const { program, owner } = await ensureWallet()
     const [vault] = await deriveVaultPda(owner)
@@ -115,6 +160,43 @@ export default function App() {
       .rpc()
 
     pushLog('spend_intent', sig)
+    await refreshPdas()
+  }
+
+  async function onSpendIntentV2() {
+    const { program, owner } = await ensureWallet()
+    const [vault] = await deriveVaultPda(owner)
+    const [policy] = await derivePolicyPda(vault)
+
+    const recipientPk = parsePubkey((recipientAddress || owner.toBase58()).trim())
+
+    // PDA seeds for audit_event include policy.next_sequence, so we fetch the policy first.
+    const policyAcct = (await (
+      program as unknown as {
+        account: { policy: { fetch: (pk: PublicKey) => Promise<unknown> } }
+      }
+    ).account.policy.fetch(policy)) as { nextSequence?: BN; next_sequence?: BN }
+
+    const nextSeq: BN | undefined = policyAcct.nextSequence ?? policyAcct.next_sequence
+    if (!nextSeq) throw new Error('Failed to read policy.next_sequence')
+
+    const [auditEvent] = await deriveAuditEventPda(policy, nextSeq)
+    const [recipientSpend] = await deriveRecipientSpendPda(policy, recipientPk)
+
+    const sig = await program.methods
+      .spendIntentV2(new BN(lamports(spendAmountSol)))
+      .accounts({
+        auditEvent,
+        recipientSpend,
+        policy,
+        vault,
+        recipient: recipientPk,
+        caller: owner,
+        systemProgram: web3.SystemProgram.programId,
+      })
+      .rpc()
+
+    pushLog('spend_intent_v2', sig)
     await refreshPdas()
   }
 
@@ -131,20 +213,14 @@ export default function App() {
       {/* ── Hero ──────────────────────────────────────── */}
       <section className="hero">
         <div className="hero-banner">
-          <img
-            src="/assets/policyvault-banner.jpeg"
-            alt="PolicyVault banner"
-            className="hero-img"
-          />
+          <img src="/assets/policyvault-banner.jpeg" alt="PolicyVault banner" className="hero-img" />
           <div className="hero-overlay" />
         </div>
         <div className="hero-body">
-          <h2 className="hero-headline">
-            Policy-enforced spending vaults for AI&nbsp;agents
-          </h2>
+          <h2 className="hero-headline">Policy-enforced spending vaults for AI&nbsp;agents</h2>
           <p className="hero-subhead">
-            Set budgets, cooldowns, and kill switches on-chain. Your agent spends
-            within&nbsp;rules&nbsp;&mdash; or it doesn&rsquo;t spend at&nbsp;all.
+            Set budgets, cooldowns, and kill switches on-chain. Your agent spends within&nbsp;rules&nbsp;&mdash; or it
+            doesn&rsquo;t spend at&nbsp;all.
           </p>
           <a href="#demo" className="btn-cta">
             Open Demo
@@ -161,25 +237,25 @@ export default function App() {
               <div className="feature-icon">&#9878;</div>
               <h3 className="feature-heading">Controlled Spending</h3>
               <p className="feature-text">
-                Daily budgets, cooldown periods, and approval requirements.
-                Your AI agent operates within strict, enforceable boundaries.
+                Daily budgets, cooldown periods, and per-recipient caps. Your AI agent operates within strict,
+                enforceable boundaries.
               </p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">&#9783;</div>
               <h3 className="feature-heading">Auditable Trail</h3>
               <p className="feature-text">
-                Every request is logged on-chain &mdash; allowed or denied, with
-                the reason recorded. Full transparency for every transaction.
+                Every request is logged on-chain &mdash; allowed or denied, with the reason recorded. Full transparency
+                for every transaction.
               </p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">&#9211;</div>
               <h3 className="feature-heading">Owner Control</h3>
               <p className="feature-text">
-                Update policy parameters at any time. Revoke access instantly.
+                Update policy parameters at any time. Pause spending instantly. Optionally restrict recipients via an
+                allowlist.
               </p>
-              <span className="coming-soon">Kill switch &mdash; coming soon</span>
             </div>
           </div>
         </section>
@@ -194,8 +270,9 @@ export default function App() {
         <section className="section" id="demo">
           <h2 className="section-title">Demo</h2>
           <p className="demo-hint">
-            <code>initialize_vault</code> &rarr; <code>initialize_policy</code> &rarr;{' '}
-            <code>spend_intent</code> / <code>set_policy</code>
+            <code>initialize_vault</code> &rarr; <code>initialize_policy</code> &rarr; <code>set_policy</code> /{' '}
+            <code>spend_intent</code>
+            <span className="demo-hint-muted"> (open Advanced for pause/allowlist/caps + spend_intent_v2)</span>
           </p>
 
           {/* Controls */}
@@ -204,29 +281,15 @@ export default function App() {
             <div className="param-grid">
               <div className="param-group">
                 <span className="param-label">Daily budget (SOL)</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={dailyBudgetSol}
-                  onChange={(e) => setDailyBudgetSol(Number(e.target.value))}
-                />
+                <input type="number" step="0.01" value={dailyBudgetSol} onChange={(e) => setDailyBudgetSol(Number(e.target.value))} />
               </div>
               <div className="param-group">
                 <span className="param-label">Cooldown (seconds)</span>
-                <input
-                  type="number"
-                  value={cooldownSeconds}
-                  onChange={(e) => setCooldownSeconds(Number(e.target.value))}
-                />
+                <input type="number" value={cooldownSeconds} onChange={(e) => setCooldownSeconds(Number(e.target.value))} />
               </div>
               <div className="param-group">
                 <span className="param-label">Spend amount (SOL)</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={spendAmountSol}
-                  onChange={(e) => setSpendAmountSol(Number(e.target.value))}
-                />
+                <input type="number" step="0.01" value={spendAmountSol} onChange={(e) => setSpendAmountSol(Number(e.target.value))} />
               </div>
             </div>
 
@@ -244,6 +307,67 @@ export default function App() {
                 spend_intent
               </button>
             </div>
+
+            <details className="accordion">
+              <summary className="accordion-summary">
+                Advanced (pause / allowlist / per-recipient cap / spend_intent_v2)
+              </summary>
+              <div className="accordion-body">
+                <div className="param-grid">
+                  <label className="param-group param-inline">
+                    <input type="checkbox" checked={paused} onChange={(e) => setPaused(e.target.checked)} />
+                    <span className="param-label">Paused (kill switch)</span>
+                  </label>
+
+                  <label className="param-group param-inline">
+                    <input
+                      type="checkbox"
+                      checked={allowlistEnabled}
+                      onChange={(e) => setAllowlistEnabled(e.target.checked)}
+                    />
+                    <span className="param-label">Allowlist enabled</span>
+                  </label>
+
+                  <div className="param-group">
+                    <span className="param-label">Allowed recipient (base58)</span>
+                    <input
+                      placeholder={wallet.publicKey?.toBase58() ?? 'Recipient pubkey'}
+                      value={allowedRecipient}
+                      onChange={(e) => setAllowedRecipient(e.target.value)}
+                      disabled={!allowlistEnabled}
+                    />
+                  </div>
+
+                  <div className="param-group">
+                    <span className="param-label">Per-recipient daily cap (SOL)</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={perRecipientCapSol}
+                      onChange={(e) => setPerRecipientCapSol(Number(e.target.value))}
+                    />
+                  </div>
+
+                  <div className="param-group">
+                    <span className="param-label">Recipient for spend_intent_v2 (base58)</span>
+                    <input
+                      placeholder={wallet.publicKey?.toBase58() ?? 'Recipient pubkey'}
+                      value={recipientAddress}
+                      onChange={(e) => setRecipientAddress(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="action-row">
+                  <button disabled={!wallet.connected} onClick={onSetPolicyAdvanced}>
+                    set_policy_advanced
+                  </button>
+                  <button disabled={!wallet.connected} onClick={onSpendIntentV2}>
+                    spend_intent_v2
+                  </button>
+                </div>
+              </div>
+            </details>
           </div>
 
           {/* Tx log */}
@@ -270,9 +394,7 @@ export default function App() {
             )}
           </div>
 
-          {!wallet.connected && (
-            <p className="connect-hint">Connect a wallet to interact with PolicyVault.</p>
-          )}
+          {!wallet.connected && <p className="connect-hint">Connect a wallet to interact with PolicyVault.</p>}
         </section>
 
         {/* ── Addresses ───────────────────────────────── */}
@@ -308,11 +430,7 @@ export default function App() {
               <div className="addr-row">
                 <span className="addr-label">Policy PDA</span>
                 <code className="addr-value">{policyPda ?? '—'}</code>
-                <button
-                  className="btn-ghost"
-                  disabled={!policyPda}
-                  onClick={() => policyPda && copy(policyPda)}
-                >
+                <button className="btn-ghost" disabled={!policyPda} onClick={() => policyPda && copy(policyPda)}>
                   Copy
                 </button>
               </div>

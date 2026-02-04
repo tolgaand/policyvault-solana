@@ -464,3 +464,49 @@
     gap: 0.3rem;
   }
 }
+
+/* ── Accordion (Advanced) ────────────────────────── */
+.accordion {
+  margin-top: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.accordion-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.9rem 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.accordion-summary::-webkit-details-marker {
+  display: none;
+}
+
+.accordion-summary::after {
+  content: '▾';
+  float: right;
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+details[open] > .accordion-summary::after {
+  content: '▴';
+}
+
+.accordion-body {
+  padding: 0 1rem 1rem;
+}
+
+.param-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.demo-hint-muted {
+  opacity: 0.7;
+  margin-left: 0.5rem;
+}

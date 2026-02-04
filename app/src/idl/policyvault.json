@@ -288,6 +288,109 @@
       ]
     },
     {
+      "name": "set_policy_advanced",
+      "docs": [
+        "C.2) Authority updates advanced policy parameters.",
+        "",
+        "This is an additive API (keeps `set_policy` as the simple MVP surface)."
+      ],
+      "discriminator": [
+        8,
+        123,
+        177,
+        135,
+        59,
+        59,
+        28,
+        255
+      ],
+      "accounts": [
+        {
+          "name": "policy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.owner",
+                "account": "Vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "daily_budget_lamports",
+          "type": "u64"
+        },
+        {
+          "name": "cooldown_seconds",
+          "type": "u32"
+        },
+        {
+          "name": "agent",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "paused",
+          "type": "bool"
+        },
+        {
+          "name": "allowlist_enabled",
+          "type": "bool"
+        },
+        {
+          "name": "allowed_recipient",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "per_recipient_daily_cap_lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "spend_intent",
       "docs": [
         "D) Record a spend intent; enforce policy, optionally execute SOL transfer.",
@@ -400,6 +503,151 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "spend_intent_v2",
+      "docs": [
+        "D.2) Spend intent with per-recipient tracking.",
+        "",
+        "Adds enforceable switches:",
+        "- `paused` (kill switch)",
+        "- `allowlist_enabled` + `allowed_recipient` (simple allowlist)",
+        "- `per_recipient_daily_cap_lamports` enforced via `RecipientSpend` PDA"
+      ],
+      "discriminator": [
+        125,
+        141,
+        229,
+        234,
+        32,
+        115,
+        2,
+        170
+      ],
+      "accounts": [
+        {
+          "name": "audit_event",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  117,
+                  100,
+                  105,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "policy"
+              },
+              {
+                "kind": "account",
+                "path": "policy.next_sequence",
+                "account": "Policy"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient_spend",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  99,
+                  105,
+                  112,
+                  105,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "policy"
+              },
+              {
+                "kind": "account",
+                "path": "recipient"
+              }
+            ]
+          }
+        },
+        {
+          "name": "policy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  105,
+                  99,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.owner",
+                "account": "Vault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "caller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -427,6 +675,19 @@
         177,
         33,
         68
+      ]
+    },
+    {
+      "name": "RecipientSpend",
+      "discriminator": [
+        69,
+        119,
+        67,
+        166,
+        59,
+        229,
+        5,
+        95
       ]
     },
     {
@@ -498,6 +759,10 @@
           {
             "name": "reason_code",
             "type": "u16"
+          },
+          {
+            "name": "policy_version",
+            "type": "u16"
           }
         ]
       }
@@ -546,6 +811,56 @@
             "type": "u64"
           },
           {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "allowlist_enabled",
+            "type": "bool"
+          },
+          {
+            "name": "allowed_recipient",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "per_recipient_daily_cap_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "policy_version",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RecipientSpend",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "policy",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "spent_today_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "day_index",
+            "type": "i64"
+          },
+          {
             "name": "bump",
             "type": "u8"
           }
@@ -564,6 +879,10 @@
           {
             "name": "policy",
             "type": "pubkey"
+          },
+          {
+            "name": "policy_version",
+            "type": "u16"
           },
           {
             "name": "sequence",

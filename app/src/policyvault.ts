@@ -27,18 +27,35 @@ export function bn(n: number | string | bigint): BN {
 export const SEEDS = {
   vault: 'vault',
   policy: 'policy',
+  audit: 'audit',
+  recipient: 'recipient',
 } as const
 
+function u64LeBytes(n: BN | bigint | number): Buffer {
+  const v = typeof n === 'bigint' ? n : BigInt(n.toString())
+  const b = Buffer.alloc(8)
+  b.writeBigUInt64LE(v)
+  return b
+}
+
 export async function deriveVaultPda(owner: PublicKey): Promise<[PublicKey, number]> {
-  return PublicKey.findProgramAddressSync([
-    Buffer.from(SEEDS.vault),
-    owner.toBuffer(),
-  ], programId())
+  return PublicKey.findProgramAddressSync([Buffer.from(SEEDS.vault), owner.toBuffer()], programId())
 }
 
 export async function derivePolicyPda(vault: PublicKey): Promise<[PublicKey, number]> {
-  return PublicKey.findProgramAddressSync([
-    Buffer.from(SEEDS.policy),
-    vault.toBuffer(),
-  ], programId())
+  return PublicKey.findProgramAddressSync([Buffer.from(SEEDS.policy), vault.toBuffer()], programId())
+}
+
+export async function deriveAuditEventPda(policy: PublicKey, sequence: BN | bigint | number): Promise<[PublicKey, number]> {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from(SEEDS.audit), policy.toBuffer(), u64LeBytes(sequence)],
+    programId(),
+  )
+}
+
+export async function deriveRecipientSpendPda(policy: PublicKey, recipient: PublicKey): Promise<[PublicKey, number]> {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from(SEEDS.recipient), policy.toBuffer(), recipient.toBuffer()],
+    programId(),
+  )
 }
