@@ -12,7 +12,7 @@ import {
   getProgram,
   programId,
 } from './policyvault'
-import { runPreflight, REASON_LABELS, type PolicySnapshot, type RecipientSpendSnapshot } from './preflight'
+import { runPreflight, buildFieldErrors, REASON_LABELS, type PolicySnapshot, type RecipientSpendSnapshot } from './preflight'
 import AuditTimeline from './AuditTimeline'
 import './App.css'
 
@@ -247,6 +247,8 @@ export default function DemoApp() {
     cooldownSeconds,
     recipientAddress,
   ])
+
+  const fieldErrors = useMemo(() => buildFieldErrors(preflight.errors), [preflight.errors])
 
   const pushLog = (label: string, sig: string) => setLogs((l) => [{ label, sig }, ...l])
 
@@ -581,27 +583,37 @@ export default function DemoApp() {
           </div>
 
           <div className="param-grid">
-            <div className="param-group">
+            <div className={`param-group${fieldErrors.dailyBudget ? ' has-error' : ''}`}>
               <span className="param-label">Daily budget (SOL)</span>
               <input
                 type="number"
                 step="0.01"
                 value={dailyBudgetSol}
+                aria-invalid={!!fieldErrors.dailyBudget}
                 onChange={(e) => setDailyBudgetSol(Number(e.target.value))}
               />
+              {fieldErrors.dailyBudget?.map((msg) => <span key={msg} className="field-error">{msg}</span>)}
             </div>
-            <div className="param-group">
+            <div className={`param-group${fieldErrors.cooldown ? ' has-error' : ''}`}>
               <span className="param-label">Cooldown (seconds)</span>
-              <input type="number" value={cooldownSeconds} onChange={(e) => setCooldownSeconds(Number(e.target.value))} />
+              <input
+                type="number"
+                value={cooldownSeconds}
+                aria-invalid={!!fieldErrors.cooldown}
+                onChange={(e) => setCooldownSeconds(Number(e.target.value))}
+              />
+              {fieldErrors.cooldown?.map((msg) => <span key={msg} className="field-error">{msg}</span>)}
             </div>
-            <div className="param-group">
+            <div className={`param-group${fieldErrors.spendAmount ? ' has-error' : ''}`}>
               <span className="param-label">Spend amount (SOL)</span>
               <input
                 type="number"
                 step="0.01"
                 value={spendAmountSol}
+                aria-invalid={!!fieldErrors.spendAmount}
                 onChange={(e) => setSpendAmountSol(Number(e.target.value))}
               />
+              {fieldErrors.spendAmount?.map((msg) => <span key={msg} className="field-error">{msg}</span>)}
             </div>
           </div>
 
@@ -624,9 +636,10 @@ export default function DemoApp() {
             <summary className="accordion-summary">Advanced (pause / allowlist / per-recipient cap / spend_intent_v2)</summary>
             <div className="accordion-body">
               <div className="param-grid">
-                <label className="param-group param-inline">
-                  <input type="checkbox" checked={paused} onChange={(e) => setPaused(e.target.checked)} />
+                <label className={`param-group param-inline${fieldErrors.paused ? ' has-error' : ''}`}>
+                  <input type="checkbox" checked={paused} aria-invalid={!!fieldErrors.paused} onChange={(e) => setPaused(e.target.checked)} />
                   <span className="param-label">Paused (kill switch)</span>
+                  {fieldErrors.paused?.map((msg) => <span key={msg} className="field-error">{msg}</span>)}
                 </label>
 
                 <label className="param-group param-inline">
@@ -638,33 +651,39 @@ export default function DemoApp() {
                   <span className="param-label">Allowlist enabled</span>
                 </label>
 
-                <div className="param-group">
+                <div className={`param-group${fieldErrors.allowedRecipient ? ' has-error' : ''}`}>
                   <span className="param-label">Allowed recipient (base58)</span>
                   <input
                     placeholder={wallet.publicKey?.toBase58() ?? 'Recipient pubkey'}
                     value={allowedRecipient}
+                    aria-invalid={!!fieldErrors.allowedRecipient}
                     onChange={(e) => setAllowedRecipient(e.target.value)}
                     disabled={!allowlistEnabled}
                   />
+                  {fieldErrors.allowedRecipient?.map((msg) => <span key={msg} className="field-error">{msg}</span>)}
                 </div>
 
-                <div className="param-group">
+                <div className={`param-group${fieldErrors.perRecipientCap ? ' has-error' : ''}`}>
                   <span className="param-label">Per-recipient daily cap (SOL)</span>
                   <input
                     type="number"
                     step="0.01"
                     value={perRecipientCapSol}
+                    aria-invalid={!!fieldErrors.perRecipientCap}
                     onChange={(e) => setPerRecipientCapSol(Number(e.target.value))}
                   />
+                  {fieldErrors.perRecipientCap?.map((msg) => <span key={msg} className="field-error">{msg}</span>)}
                 </div>
 
-                <div className="param-group">
+                <div className={`param-group${fieldErrors.recipient ? ' has-error' : ''}`}>
                   <span className="param-label">Recipient for spend_intent_v2 (base58)</span>
                   <input
                     placeholder={wallet.publicKey?.toBase58() ?? 'Recipient pubkey'}
                     value={recipientAddress}
+                    aria-invalid={!!fieldErrors.recipient}
                     onChange={(e) => setRecipientAddress(e.target.value)}
                   />
+                  {fieldErrors.recipient?.map((msg) => <span key={msg} className="field-error">{msg}</span>)}
                 </div>
               </div>
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   runPreflight,
+  buildFieldErrors,
   REASON_CODES,
   solToLamports,
   isValidBase58Address,
@@ -94,6 +95,40 @@ describe('solToLamports', () => {
 
   it('handles fractional SOL', () => {
     expect(solToLamports(0.5)).toBe(500_000_000n)
+  })
+})
+
+/* ------------------------------------------------------------------ */
+/*  Unit: buildFieldErrors (inline error rendering map)               */
+/* ------------------------------------------------------------------ */
+
+describe('buildFieldErrors', () => {
+  it('groups multiple errors by field', () => {
+    const errors = [
+      { field: 'spendAmount', code: 'A', message: 'msg A' },
+      { field: 'recipient', code: 'B', message: 'msg B' },
+      { field: 'spendAmount', code: 'C', message: 'msg C' },
+    ]
+    const map = buildFieldErrors(errors)
+    expect(map.spendAmount).toEqual(['msg A', 'msg C'])
+    expect(map.recipient).toEqual(['msg B'])
+    expect(map.dailyBudget).toBeUndefined()
+  })
+
+  it('returns empty object for no errors', () => {
+    expect(buildFieldErrors([])).toEqual({})
+  })
+
+  it('maps preflight field errors to correct input fields', () => {
+    const res = runPreflight(
+      makeInput({ spendAmountSol: -1, dailyBudgetSol: 0, recipientAddress: 'bad!' }),
+    )
+    const map = buildFieldErrors(res.errors)
+    expect(map.spendAmount).toBeDefined()
+    expect(map.spendAmount![0]).toContain('greater than 0')
+    expect(map.dailyBudget).toBeDefined()
+    expect(map.recipient).toBeDefined()
+    expect(map.cooldown).toBeUndefined()
   })
 })
 
