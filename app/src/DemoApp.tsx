@@ -14,6 +14,7 @@ import {
 } from './policyvault'
 import { runPreflight, buildFieldErrors, REASON_LABELS, type PolicySnapshot, type RecipientSpendSnapshot } from './preflight'
 import AuditTimeline from './AuditTimeline'
+import { DEFAULT_FILTERS, downloadBlob, eventsToCSV, eventsToJSON, filterAuditEvents, uniqueReasonCodes } from './auditTrail'
 import './App.css'
 
 type TxLog = { label: string; sig: string }
@@ -128,6 +129,14 @@ export default function DemoApp() {
   const [spendAmountSol, setSpendAmountSol] = useState(0.1)
   const [auditEvents, setAuditEvents] = useState<AuditEventEntry[]>([])
   const [auditLoading, setAuditLoading] = useState(false)
+
+  const [auditFilters, setAuditFilters] = useState(DEFAULT_FILTERS)
+
+  const auditReasonOptions = useMemo(() => uniqueReasonCodes(auditEvents), [auditEvents])
+
+  const filteredAuditEvents = useMemo(() => {
+    return filterAuditEvents(auditEvents, auditFilters)
+  }, [auditEvents, auditFilters])
 
   function applyPreset(preset: 'budget_only' | 'paused' | 'allowlist_cap') {
     const self = wallet.publicKey?.toBase58() ?? ''
@@ -825,19 +834,117 @@ export default function DemoApp() {
 
         <div className="glass-panel">
           <h3 className="panel-header">Audit Trail</h3>
-          <p className="demo-hint">Fetch the last 5 <code>AuditEvent</code> accounts (sequence descending).</p>
+          <p className="demo-hint">Fetch the last 5 <code>AuditEvent</code> accounts (sequence descending). Filter + export what you loaded.</p>
 
-          <div className="action-row">
+          <div className="action-row" style={{ flexWrap: 'wrap', gap: 10 }}>
             <button className="btn-secondary" disabled={!wallet.connected || auditLoading} onClick={fetchRecentAuditEvents}>
               {auditLoading ? 'fetching…' : 'fetch recent audit events'}
             </button>
+
+            <div className="audit-controls" role="group" aria-label="Audit trail filters">
+              <label className="audit-control">
+                <span className="audit-control-label">status</span>
+                <select
+                  value={auditFilters.status}
+                  onChange={(e) =>
+                    setAuditFilters((f) => ({ ...f, status: e.target.value as typeof f.status }))
+                  }
+                >
+                  <option value="all">all</option>
+                  <option value="allowed">allowed</option>
+                  <option value="denied">denied</option>
+                </select>
+              </label>
+
+              <label className="audit-control" style={{ minWidth: 220 }}>
+                <span className="audit-control-label">recipient contains</span>
+                <input
+                  value={auditFilters.recipient}
+                  placeholder="base58 substring"
+                  onChange={(e) => setAuditFilters((f) => ({ ...f, recipient: e.target.value }))}
+                />
+              </label>
+
+              <label className="audit-control">
+                <span className="audit-control-label">reason</span>
+                <select
+                  value={auditFilters.reasonCode === null ? 'all' : String(auditFilters.reasonCode)}
+                  onChange={(e) =>
+                    setAuditFilters((f) => ({
+                      ...f,
+                      reasonCode: e.target.value === 'all' ? null : Number(e.target.value),
+                    }))
+                  }
+                >
+                  <option value="all">all</option>
+                  {auditReasonOptions.map((code) => (
+                    <option key={code} value={String(code)}>
+                      {code}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                className="btn-ghost"
+                type="button"
+                onClick={() => setAuditFilters(DEFAULT_FILTERS)}
+                disabled={
+                  auditFilters.status === 'all' &&
+                  auditFilters.recipient.trim() === '' &&
+                  auditFilters.reasonCode === null
+                }
+              >
+                Reset
+              </button>
+            </div>
+
+            <div className="audit-export" role="group" aria-label="Audit trail export">
+              <button
+                className="btn-secondary"
+                type="button"
+                disabled={filteredAuditEvents.length === 0}
+                onClick={() => {
+                  const csv = eventsToCSV(filteredAuditEvents)
+                  const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+                  downloadBlob(csv, `policyvault-audit-${ts}.csv`, 'text/csv')
+                }}
+              >
+                Export CSV
+              </button>
+              <button
+                className="btn-secondary"
+                type="button"
+                disabled={filteredAuditEvents.length === 0}
+                onClick={() => {
+                  const json = eventsToJSON(filteredAuditEvents)
+                  const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
+                  downloadBlob(json, `policyvault-audit-${ts}.json`, 'application/json')
+                }}
+              >
+                Export JSON
+              </button>
+            </div>
           </div>
+
+          <p className="demo-hint" style={{ marginTop: 8 }}>
+            Showing {filteredAuditEvents.length} of {auditEvents.length} loaded events.
+          </p>
 
           {auditEvents.length === 0 ? (
             <p className="tx-empty">No audit events loaded yet.</p>
+          ) : filteredAuditEvents.length === 0 ? (
+            <div className="tx-empty">
+              <p style={{ margin: 0 }}>No events match current filters.</p>
+              <div className="action-row" style={{ marginTop: 10 }}>
+                <button className="btn-secondary" type="button" onClick={() => setAuditFilters(DEFAULT_FILTERS)}>
+                  Reset filters
+                </button>
+              </div>
+            </div>
           ) : (
             <AuditTimeline
-              events={auditEvents}
+              events={filteredAuditEvents}
               formatReason={formatReason}
               formatLamports={formatLamports}
               formatTimestamp={formatTimestamp}

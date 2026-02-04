@@ -594,3 +594,37 @@ details[open] > .accordion-summary::after {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Audit Trail controls ─────────────────────────── */
+.audit-controls {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.audit-control {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.audit-control-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.audit-controls input,
+.audit-controls select {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.45rem;
+}
+
+.audit-export {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+}
