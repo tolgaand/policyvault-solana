@@ -17,6 +17,7 @@ import './App.css'
 type TxLog = { label: string; sig: string }
 
 const REASON_CODE: Record<number, string> = {
+  0: 'OK',
   1: 'OK',
   2: 'BUDGET_EXCEEDED',
   3: 'COOLDOWN',
@@ -27,7 +28,7 @@ const REASON_CODE: Record<number, string> = {
 }
 
 function formatReason(code: number | null | undefined) {
-  if (!code) return 'UNKNOWN'
+  if (code === null || code === undefined) return 'UNKNOWN'
   return `${code} ${REASON_CODE[code] ?? 'UNKNOWN'}`
 }
 
