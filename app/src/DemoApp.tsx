@@ -15,6 +15,14 @@ import {
 import './App.css'
 
 type TxLog = { label: string; sig: string }
+type AuditEventEntry = {
+  sequence: bigint
+  allowed: boolean
+  reasonCode: unknown
+  amount: unknown
+  recipient: string
+  ts: unknown
+}
 
 const REASON_CODE: Record<number, string> = {
   1: 'OK',
@@ -75,6 +83,14 @@ function formatLamports(v: unknown): string {
   return `${bi.toString()} lamports (${solStr} SOL)`
 }
 
+function formatTimestamp(v: unknown): string {
+  const bi = toBigInt(v)
+  if (bi === null) return '—'
+  const ms = Number(bi) * 1000
+  if (!Number.isFinite(ms)) return '—'
+  return new Date(ms).toLocaleString()
+}
+
 function lamports(sol: number) { 
   return Math.round(sol * web3.LAMPORTS_PER_SOL)
 }
@@ -116,6 +132,8 @@ export default function DemoApp() {
   const [dailyBudgetSol, setDailyBudgetSol] = useState(0.5)
   const [cooldownSeconds, setCooldownSeconds] = useState(60)
   const [spendAmountSol, setSpendAmountSol] = useState(0.1)
+  const [auditEvents, setAuditEvents] = useState<AuditEventEntry[]>([])
+  const [auditLoading, setAuditLoading] = useState(false)
 
   function applyPreset(preset: 'budget_only' | 'paused' | 'allowlist_cap') {
     const self = wallet.publicKey?.toBase58() ?? ''
@@ -419,6 +437,63 @@ export default function DemoApp() {
     })
   }
 
+  async function fetchRecentAuditEvents() {
+    await runAction('fetch_recent_audit_events', async () => {
+      setAuditLoading(true)
+      try {
+        const { program, owner } = await ensureWallet()
+        const [vault] = await deriveVaultPda(owner)
+        const [policy] = await derivePolicyPda(vault)
+
+        const policyAcct = (await (
+          program as unknown as {
+            account: { policy: { fetch: (pk: PublicKey) => Promise<unknown> } }
+          }
+        ).account.policy.fetch(policy)) as { nextSequence?: BN; next_sequence?: BN }
+
+        const nextSeq = policyAcct.nextSequence ?? policyAcct.next_sequence
+        const nextSeqBig = toBigInt(nextSeq)
+        if (nextSeqBig === null) throw new Error('Failed to read policy.next_sequence')
+
+        const startSeq = nextSeqBig - 1n
+        if (startSeq < 0n) {
+          setAuditEvents([])
+          return
+        }
+
+        const results: AuditEventEntry[] = []
+        for (let i = 0; i < 5; i += 1) {
+          const seq = startSeq - BigInt(i)
+          if (seq < 0n) break
+
+          const [auditEvent] = await deriveAuditEventPda(policy, seq)
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const audit = (await (program as any).account.auditEvent.fetch(auditEvent)) as any
+            const seqValue = toBigInt(audit.sequence) ?? seq
+            const recipient = audit.recipient?.toBase58 ? audit.recipient.toBase58() : String(audit.recipient ?? '—')
+            results.push({
+              sequence: seqValue,
+              allowed: Boolean(audit.allowed),
+              reasonCode: audit.reasonCode ?? audit.reason_code,
+              amount: audit.amount,
+              recipient,
+              ts: audit.ts,
+            })
+          } catch {
+            // ignore missing audit events
+          }
+        }
+
+        results.sort((a, b) => (a.sequence > b.sequence ? -1 : a.sequence < b.sequence ? 1 : 0))
+        setAuditEvents(results)
+        await refreshPdas()
+      } finally {
+        setAuditLoading(false)
+      }
+    })
+  }
+
   return (
     <>
       <section className="section" id="demo">
@@ -632,6 +707,37 @@ export default function DemoApp() {
                 </div>
               </div>
             </div>
+          )}
+        </div>
+
+        <div className="glass-panel">
+          <h3 className="panel-header">Audit Trail</h3>
+          <p className="demo-hint">Fetch the last 5 <code>AuditEvent</code> accounts (sequence descending).</p>
+
+          <div className="action-row">
+            <button className="btn-secondary" disabled={!wallet.connected || auditLoading} onClick={fetchRecentAuditEvents}>
+              {auditLoading ? 'fetching…' : 'fetch recent audit events'}
+            </button>
+          </div>
+
+          {auditEvents.length === 0 ? (
+            <p className="tx-empty">No audit events loaded yet.</p>
+          ) : (
+            <ul className="tx-list">
+              {auditEvents.map((event) => (
+                <li key={event.sequence.toString()} className="tx-item" style={{ alignItems: 'flex-start' }}>
+                  <span className="tx-label">#{event.sequence.toString()}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', overflow: 'hidden' }}>
+                    <span>
+                      allowed: {String(event.allowed)} · reason: {formatReason(event.reasonCode)} · amount:{' '}
+                      {formatLamports(event.amount)}
+                    </span>
+                    <span className="tx-sig">recipient: {event.recipient}</span>
+                    <span className="tx-sig">ts: {formatTimestamp(event.ts)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
