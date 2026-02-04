@@ -1,149 +1,129 @@
-/* ── Cyberpunk base ────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+/* PolicyVault UI — Rivalz-like clean theme (no cyberpunk) */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
-  --neon-cyan: #0ff;
-  --neon-magenta: #f0f;
-  --neon-yellow: #ff0;
-  --bg-deep: #0a0a12;
-  --bg-panel: rgba(10, 10, 22, 0.72);
-  --border-glow: rgba(0, 255, 255, 0.25);
-  --text-primary: #e0e6ed;
-  --text-dim: rgba(224, 230, 237, 0.5);
-  --font-mono: 'Share Tech Mono', 'Fira Mono', monospace;
-  --font-display: 'Orbitron', sans-serif;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: rgba(17, 24, 39, 0.03);
+  --text: #0b1020;
+  --muted: rgba(11, 16, 32, 0.55);
+  --border: rgba(11, 16, 32, 0.12);
 
-  font-family: var(--font-mono);
+  --brand-purple: #463174;
+  --brand-purple-2: #4c50b3;
+  --brand-pink: #c170d7;
+  --brand-yellow: #f5bb00;
+
+  font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   line-height: 1.55;
   font-weight: 400;
-  color: var(--text-primary);
-  background-color: var(--bg-deep);
+  color: var(--text);
+  background-color: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ── Grid background ──────────────────────────────── */
 body {
   margin: 0;
   min-height: 100vh;
   min-width: 320px;
-  background:
-    linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 0%, rgba(0,255,255,0.08) 0%, transparent 60%),
-    var(--bg-deep);
-  background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
-}
-
-/* animated scanline overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,255,255,0.008) 2px,
-    rgba(0,255,255,0.008) 4px
-  );
-  animation: scanline-scroll 8s linear infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::after {
-    animation: none;
-  }
-}
-@keyframes scanline-scroll {
-  from { background-position: 0 0; }
-  to   { background-position: 0 200px; }
+  background: radial-gradient(1200px 700px at 50% -200px, rgba(76, 80, 179, 0.12), transparent 55%), var(--bg);
 }
 
 #root {
   width: 100%;
 }
 
-/* ── Links ────────────────────────────────────────── */
 a {
-  color: var(--neon-cyan);
+  color: var(--brand-purple-2);
   text-decoration: none;
-  transition: color 0.2s, text-shadow 0.2s;
-}
-a:hover {
-  color: #fff;
-  text-shadow: 0 0 8px var(--neon-cyan);
 }
 
-/* ── Buttons (global) ─────────────────────────────── */
+a:hover {
+  text-decoration: underline;
+}
+
+/* Buttons */
 button {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  padding: 0.55em 1.3em;
-  border: 1px solid var(--neon-cyan);
-  border-radius: 2px;
-  background: rgba(0, 255, 255, 0.06);
-  color: var(--neon-cyan);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 10px 18px;
+  border-radius: 0;
+  border: 1px solid var(--brand-pink);
+  background: var(--brand-yellow);
+  color: var(--brand-purple);
   cursor: pointer;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition: background 0.2s, box-shadow 0.2s, color 0.2s, border-color 0.2s;
+  letter-spacing: 0.06em;
+  font-weight: 600;
   position: relative;
+  transition: transform 0.12s ease, filter 0.12s ease;
 }
+
+button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 0.5px solid var(--brand-pink);
+  transform: translate(3px, 3px);
+  z-index: -1;
+}
+
 button:hover:not(:disabled) {
-  background: rgba(0, 255, 255, 0.15);
-  box-shadow: 0 0 12px rgba(0, 255, 255, 0.35), inset 0 0 12px rgba(0, 255, 255, 0.08);
-  color: #fff;
+  transform: translate(1px, 1px);
+  filter: brightness(1.02);
 }
+
 button:active:not(:disabled) {
-  background: rgba(0, 255, 255, 0.25);
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.5);
+  transform: translate(2px, 2px);
 }
+
 button:disabled {
-  opacity: 0.3;
+  opacity: 0.55;
   cursor: not-allowed;
-  border-color: rgba(0, 255, 255, 0.15);
 }
+
 button:focus-visible {
-  outline: 2px solid var(--neon-cyan);
+  outline: 2px solid rgba(76, 80, 179, 0.55);
   outline-offset: 2px;
 }
 
-/* ── Inputs ───────────────────────────────────────── */
+/* Secondary buttons can be applied via className="btn-secondary" */
+button.btn-secondary {
+  background: var(--brand-purple-2);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.31);
+}
+
+button.btn-secondary::after {
+  border-color: rgba(255, 255, 255, 0.31);
+}
+
+/* Inputs */
 input {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  background: rgba(0, 255, 255, 0.04);
-  border: 1px solid var(--border-glow);
-  border-radius: 2px;
-  color: var(--text-primary);
-  padding: 0.45em 0.6em;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  color: var(--text);
+  padding: 10px 12px;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 
 input::placeholder {
-  color: rgba(224, 230, 237, 0.35);
+  color: rgba(11, 16, 32, 0.35);
 }
 
 input:focus {
   outline: none;
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+  border-color: rgba(76, 80, 179, 0.55);
+  box-shadow: 0 0 0 3px rgba(76, 80, 179, 0.12);
 }
 
 input:disabled {
-  opacity: 0.45;
+  opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* ── Scrollbar ────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 255, 0.2);
-  border-radius: 3px;
 }
