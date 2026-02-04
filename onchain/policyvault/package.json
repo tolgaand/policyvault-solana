@@ -3,7 +3,7 @@
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "anchor:test": "COPYFILE_DISABLE=1 COPY_EXTENDED_ATTRIBUTES_DISABLE=1 anchor test"
+    "anchor:test": "COPYFILE_DISABLE=1 COPY_EXTENDED_ATTRIBUTES_DISABLE=1 bash -lc 'set -euo pipefail; PROGRAM_ID=DiWRnGf1JpqZrL8n9dUA9bUaJ4ruBVvmmKBcrdp7tJLD; anchor build; PROGRAM_SO=target/deploy/policyvault.so; LEDGER_DIR=$(mktemp -d); LOG_FILE=${TMPDIR:-/tmp}/policyvault-validator.$$.log; FAUCET_PORT=$((9900 + ($$ % 500))); solana-test-validator --reset --bind-address 127.0.0.1 --ledger $LEDGER_DIR --faucet-sol 100 --faucet-port $FAUCET_PORT --bpf-program $PROGRAM_ID $PROGRAM_SO >$LOG_FILE 2>&1 & VPID=$!; cleanup(){ kill $VPID >/dev/null 2>&1 || true; wait $VPID >/dev/null 2>&1 || true; rm -rf $LEDGER_DIR || true; }; trap cleanup EXIT; for i in $(seq 1 60); do solana cluster-version -u http://127.0.0.1:8899 >/dev/null 2>&1 && break; sleep 1; if [ $i -eq 60 ]; then echo validator failed to start; tail -n 200 $LOG_FILE >&2 || true; exit 1; fi; done; solana airdrop 10 --url http://127.0.0.1:8899 --keypair ../../.keypairs/deployer.json >/dev/null 2>&1 || true; anchor test --skip-build --skip-local-validator --skip-deploy'"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.32.1"
